@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 enum SystemAction: String, CaseIterable, Equatable, Sendable, Identifiable {
@@ -38,31 +39,23 @@ protocol SystemActionExecuting: AnyObject {
 }
 
 @MainActor
-protocol SystemProcessRunning: AnyObject {
-    func start(executableURL: URL, arguments: [String]) throws
+protocol ScreenSaverLaunching: AnyObject {
+    func launchScreenSaver() -> Bool
 }
 
 @MainActor
-final class FoundationSystemProcessRunner: SystemProcessRunning {
-    private var runningProcesses: [Process] = []
-
-    func start(executableURL: URL, arguments: [String]) throws {
-        runningProcesses.removeAll { !$0.isRunning }
-
-        let process = Process()
-        process.executableURL = executableURL
-        process.arguments = arguments
-        try process.run()
-        runningProcesses.append(process)
+final class WorkspaceScreenSaverLauncher: ScreenSaverLaunching {
+    func launchScreenSaver() -> Bool {
+        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app"))
     }
 }
 
 @MainActor
 final class MacOSSystemActionExecutor: SystemActionExecuting {
-    private let processRunner: any SystemProcessRunning
+    private let screenSaverLauncher: any ScreenSaverLaunching
 
-    init(processRunner: any SystemProcessRunning = FoundationSystemProcessRunner()) {
-        self.processRunner = processRunner
+    init(screenSaverLauncher: any ScreenSaverLaunching = WorkspaceScreenSaverLauncher()) {
+        self.screenSaverLauncher = screenSaverLauncher
     }
 
     func execute(_ action: SystemAction) throws {
@@ -86,10 +79,9 @@ final class MacOSSystemActionExecutor: SystemActionExecuting {
     }
 
     private func lockScreen() throws {
-        try processRunner.start(
-            executableURL: URL(fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine"),
-            arguments: ["-background"]
-        )
+        guard screenSaverLauncher.launchScreenSaver() else {
+            throw SystemActionError.failed("macOS could not start the screen saver.")
+        }
     }
 
     private enum SystemActionError: LocalizedError {
