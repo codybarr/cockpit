@@ -296,9 +296,9 @@ private struct LauncherResultRow: View {
 
     var body: some View {
         Button(action: select) {
-            HStack(spacing: 12) {
+            HStack(spacing: 16) {
                 resultIcon
-                    .frame(width: 32, height: 32)
+                    .frame(width: 38, height: 38)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(result.label).font(.system(size: 20, weight: .medium))
                     Text(subtitle)
@@ -308,9 +308,9 @@ private struct LauncherResultRow: View {
                 Spacer()
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 13)
             .frame(height: 60)
-            .background(isSelected ? Color.white.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 6))
+            .background(isSelected ? Color(red: 0.19, green: 0.40, blue: 0.55) : .clear)
         }
         .buttonStyle(.plain)
     }
