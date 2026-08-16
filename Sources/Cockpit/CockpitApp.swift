@@ -156,6 +156,10 @@ private final class LauncherPanelController {
         controller.moveSelection(by: offset)
     }
 
+    fileprivate func startFilenameSearch() -> Bool {
+        controller.startFilenameSearch()
+    }
+
     fileprivate func setRevealHintVisible(_ isVisible: Bool) {
         controller.setRevealHintVisible(isVisible)
     }
@@ -213,6 +217,7 @@ private final class LauncherPanel: NSPanel {
         }
 
         switch event.keyCode {
+        case UInt16(kVK_Space) where controller?.startFilenameSearch() == true: return
         case UInt16(kVK_ANSI_A) where event.modifierFlags.contains(.command):
             NSApp.sendAction(#selector(NSResponder.selectAll(_:)), to: nil, from: self)
         case UInt16(kVK_Return) where event.modifierFlags.contains(.command): controller?.revealSelection()

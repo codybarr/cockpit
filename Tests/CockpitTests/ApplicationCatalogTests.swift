@@ -11,12 +11,18 @@ final class ApplicationCatalogTests: XCTestCase {
         try FileManager.default.createDirectory(at: application, withIntermediateDirectories: true)
         try "".write(to: root.appending(path: "not-an-app.txt"), atomically: true, encoding: .utf8)
 
-        let catalog = ApplicationCatalog(roots: [root])
+        let catalog = ApplicationCatalog(roots: [root], includesFinder: false)
 
         XCTAssertEqual(
             try catalog.scan(),
             [ApplicationCandidate(name: "Example", url: application.resolvingSymlinksInPath())]
         )
+    }
+
+    func testIncludesFinderAsASearchableApplication() throws {
+        let applications = try ApplicationCatalog(roots: []).scan()
+
+        XCTAssertTrue(applications.contains(ApplicationCatalog.finder))
     }
 
     func testDiscoversApplicationsInSystemApplicationRoots() throws {

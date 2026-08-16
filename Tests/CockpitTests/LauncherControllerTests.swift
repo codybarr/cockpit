@@ -17,6 +17,17 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertEqual(catalog.scanCount, 0)
     }
 
+    func testStartingFilenameSearchAddsTheFileSearchPrefix() {
+        let controller = makeController(catalog: StubCatalog(applications: []))
+        controller.invoke()
+
+        controller.startFilenameSearch()
+
+        XCTAssertEqual(controller.state.query, "'")
+        XCTAssertTrue(controller.state.results.isEmpty)
+        XCTAssertNil(controller.state.selectedResult)
+    }
+
     func testQueryingRanksApplicationsAndSelectsTheBestResult() {
         let clock = application("Clock")
         let calendar = application("Calendar")

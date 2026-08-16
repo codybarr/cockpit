@@ -20,9 +20,32 @@ final class FilenameIndexTests: XCTestCase {
         XCTAssertTrue(try index.matches(for: "meeting").isEmpty)
     }
 
+    func testRefreshesAfterFilesystemEvents() throws {
+        let root = try makeTemporaryDirectory()
+        let databaseDirectory = try makeTemporaryDirectory()
+        defer {
+            try? FileManager.default.removeItem(at: root)
+            try? FileManager.default.removeItem(at: databaseDirectory)
+        }
+        let index = try FilenameIndex(databaseURL: databaseDirectory.appending(path: "index.sqlite"))
+        try index.addIndexedFolder(root)
+
+        let expectedFile = root.appending(path: "created-after-watching.txt")
+        let refreshed = expectation(description: "filename index receives the filesystem event")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            try? "".write(to: expectedFile, atomically: true, encoding: .utf8)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            if (try? index.matches(for: "created-after-watching"))?.map(\.name).contains(expectedFile.lastPathComponent) == true {
+                refreshed.fulfill()
+            }
+        }
+        wait(for: [refreshed], timeout: 3)
+    }
+
     private func makeTemporaryDirectory() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
-            .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let directory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appending(path: ".build/CockpitTests-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
     }

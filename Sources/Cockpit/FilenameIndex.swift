@@ -141,7 +141,7 @@ final class FilenameIndex: FilenameIndexing {
             [folder.path] as CFArray,
             FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
             1,
-            FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagWatchRoot)
+            FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagWatchRoot | kFSEventStreamCreateFlagUseCFTypes)
         ) else { return }
         FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
         guard FSEventStreamStart(stream) else {

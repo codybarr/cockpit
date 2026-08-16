@@ -69,6 +69,7 @@ final class LauncherController: ObservableObject {
     private let fileRevealer: any FileRevealing
     private let useTracker: any ApplicationUseTracking
     private let search: ApplicationSearch
+    private var isAwaitingFirstQueryCharacter = false
     @Published private(set) var state = LauncherState()
 
     init(
@@ -94,10 +95,19 @@ final class LauncherController: ObservableObject {
     }
 
     func invoke() {
+        isAwaitingFirstQueryCharacter = true
         state = LauncherState(isVisible: true)
     }
 
+    @discardableResult
+    func startFilenameSearch() -> Bool {
+        guard isAwaitingFirstQueryCharacter else { return false }
+        updateQuery("'")
+        return true
+    }
+
     func updateQuery(_ query: String) {
+        isAwaitingFirstQueryCharacter = false
         state.query = query
         state.errorMessage = nil
 

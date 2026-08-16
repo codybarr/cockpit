@@ -16,15 +16,17 @@ struct ApplicationCandidate: Equatable, Sendable, Identifiable {
 
 struct ApplicationCatalog: ApplicationCataloging {
     let roots: [URL]
+    private let includesFinder: Bool
     private let fileManager: FileManager
 
-    init(roots: [URL] = Self.standardRoots, fileManager: FileManager = .default) {
+    init(roots: [URL] = Self.standardRoots, includesFinder: Bool = true, fileManager: FileManager = .default) {
         self.roots = roots
+        self.includesFinder = includesFinder
         self.fileManager = fileManager
     }
 
     func scan() throws -> [ApplicationCandidate] {
-        var applications: [ApplicationCandidate] = []
+        var applications = includesFinder ? [Self.finder] : []
 
         for root in roots where fileManager.fileExists(atPath: root.path) {
             guard let enumerator = fileManager.enumerator(
@@ -49,6 +51,8 @@ struct ApplicationCatalog: ApplicationCataloging {
         if let bundleName, !bundleName.isEmpty { return bundleName }
         return url.deletingPathExtension().lastPathComponent
     }
+
+    static let finder = ApplicationCandidate(name: "Finder", url: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"))
 
     static let standardRoots = [
         URL(fileURLWithPath: "/Applications", isDirectory: true),
