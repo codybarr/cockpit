@@ -55,8 +55,11 @@ final class IndexedFoldersWindowController: NSWindowController {
             defer: false
         )
         window.title = "Indexed Folders"
+        window.contentMaxSize = NSSize(width: 900, height: 600)
         window.center()
-        window.contentView = NSHostingView(rootView: IndexedFoldersView(settings: IndexedFoldersSettings(index: index)))
+        let hostingView = NSHostingView(rootView: IndexedFoldersView(settings: IndexedFoldersSettings(index: index)))
+        hostingView.sizingOptions = []
+        window.contentView = hostingView
         super.init(window: window)
     }
 
