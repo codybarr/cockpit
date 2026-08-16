@@ -11,4 +11,4 @@ swift test
 swift run Cockpit
 ```
 
-Press **Option-Space** to show the Launcher. Cockpit searches the standard application locations (`/Applications`, `/System/Applications`, `/System/Library/CoreServices`, and `~/Applications`) without Spotlight. Select an application and press Return to open it.
+Press **Option-Space** to show the Launcher. Use Cockpit’s menu-bar icon to show or quit the app. Cockpit searches the standard application locations (`/Applications`, `/System/Applications`, `/System/Library/CoreServices`, and `~/Applications`) without Spotlight. Select an application and press Return to open it.

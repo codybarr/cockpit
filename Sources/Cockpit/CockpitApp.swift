@@ -11,6 +11,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
     )
     private var panelController: LauncherPanelController!
     private var hotkey: GlobalHotkey?
+    private var statusItem: NSStatusItem?
 
     static func main() {
         let application = NSApplication.shared
@@ -22,6 +23,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         panelController = LauncherPanelController(controller: launcherController)
+        installStatusItem()
 
         do {
             let hotkey = try GlobalHotkey(keyCode: UInt32(kVK_Space), modifiers: UInt32(optionKey)) { [weak self] in
@@ -36,6 +38,27 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
     private func showLauncher() {
         launcherController.invoke()
         panelController.present()
+    }
+
+    private func installStatusItem() {
+        let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem.button?.image = NSImage(systemSymbolName: "airplane", accessibilityDescription: "Cockpit")
+
+        let menu = NSMenu()
+        menu.addItem(withTitle: "Show Cockpit", action: #selector(showCockpitFromMenu), keyEquivalent: "")
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Quit Cockpit", action: #selector(quitCockpit), keyEquivalent: "q")
+        menu.items.forEach { $0.target = self }
+        statusItem.menu = menu
+        self.statusItem = statusItem
+    }
+
+    @objc private func showCockpitFromMenu() {
+        showLauncher()
+    }
+
+    @objc private func quitCockpit() {
+        NSApp.terminate(nil)
     }
 }
 
