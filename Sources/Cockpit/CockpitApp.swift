@@ -183,37 +183,47 @@ private struct LauncherView: View {
                     .foregroundStyle(.white.opacity(0.62))
                     .padding(28)
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 4) {
-                        ForEach(Array(state.results.enumerated()), id: \.element.id) { index, application in
-                            Button {
-                                select(index)
-                            } label: {
-                                HStack(spacing: 14) {
-                                    Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
-                                        .resizable()
-                                        .frame(width: 32, height: 32)
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(application.name).font(.system(size: 17, weight: .medium))
-                                        Text(application.url.path).font(.system(size: 12)).foregroundStyle(.white.opacity(0.56))
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 4) {
+                            ForEach(Array(state.results.enumerated()), id: \.element.id) { index, application in
+                                Button {
+                                    select(index)
+                                } label: {
+                                    HStack(spacing: 14) {
+                                        Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
+                                            .resizable()
+                                            .frame(width: 32, height: 32)
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            Text(application.name).font(.system(size: 17, weight: .medium))
+                                            Text(application.url.path).font(.system(size: 12)).foregroundStyle(.white.opacity(0.56))
+                                        }
+                                        Spacer()
                                     }
-                                    Spacer()
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 10)
+                                    .background(state.selectedIndex == index ? Color.white.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 7))
                                 }
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                .background(state.selectedIndex == index ? Color.white.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 7))
+                                .buttonStyle(.plain)
+                                .simultaneousGesture(TapGesture(count: 2).onEnded(execute))
+                                .id(application.id)
                             }
-                            .buttonStyle(.plain)
-                            .simultaneousGesture(TapGesture(count: 2).onEnded(execute))
                         }
+                        .padding(10)
                     }
-                    .padding(10)
+                    .onAppear { scrollToSelection(using: proxy) }
+                    .onChange(of: state.selectedIndex) { _ in scrollToSelection(using: proxy) }
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(red: 0.10, green: 0.11, blue: 0.12))
+    }
+
+    private func scrollToSelection(using proxy: ScrollViewProxy) {
+        guard let selectedResult = state.selectedResult else { return }
+        proxy.scrollTo(selectedResult.id, anchor: .center)
     }
 }
 
