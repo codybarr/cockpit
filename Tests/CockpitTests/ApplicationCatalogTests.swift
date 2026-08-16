@@ -1,0 +1,28 @@
+import Foundation
+import XCTest
+@testable import Cockpit
+
+final class ApplicationCatalogTests: XCTestCase {
+    func testDiscoversApplicationBundlesFromConfiguredRoots() throws {
+        let root = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let application = root.appending(path: "Utilities/Example.app")
+        try FileManager.default.createDirectory(at: application, withIntermediateDirectories: true)
+        try "".write(to: root.appending(path: "not-an-app.txt"), atomically: true, encoding: .utf8)
+
+        let catalog = ApplicationCatalog(roots: [root])
+
+        XCTAssertEqual(
+            try catalog.scan(),
+            [ApplicationCandidate(name: "Example", url: application.resolvingSymlinksInPath())]
+        )
+    }
+
+    private func makeTemporaryDirectory() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }
+}
