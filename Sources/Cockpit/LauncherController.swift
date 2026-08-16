@@ -50,6 +50,11 @@ final class LauncherController {
         state.selectedIndex = index
     }
 
+    func moveSelection(by offset: Int) {
+        guard let selectedIndex = state.selectedIndex, !state.results.isEmpty else { return }
+        state.selectedIndex = min(max(selectedIndex + offset, state.results.startIndex), state.results.index(before: state.results.endIndex))
+    }
+
     func executeSelectedResult() {
         guard let selectedResult = state.selectedResult else { return }
 

@@ -86,7 +86,7 @@ private final class LauncherPanelController {
         self.controller = controller
         panel = LauncherPanel(
             contentRect: NSRect(x: 0, y: 0, width: 720, height: 430),
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
@@ -109,6 +109,11 @@ private final class LauncherPanelController {
 
     fileprivate func selectResult(at index: Int) {
         controller.selectResult(at: index)
+        render()
+    }
+
+    fileprivate func moveSelection(by offset: Int) {
+        controller.moveSelection(by: offset)
         render()
     }
 
@@ -137,11 +142,21 @@ private final class LauncherPanelController {
 private final class LauncherPanel: NSPanel {
     weak var controller: LauncherPanelController?
 
-    override func keyDown(with event: NSEvent) {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+
+    override func sendEvent(_ event: NSEvent) {
+        guard event.type == .keyDown else {
+            super.sendEvent(event)
+            return
+        }
+
         switch event.keyCode {
         case UInt16(kVK_Return): controller?.executeSelection()
+        case UInt16(kVK_UpArrow): controller?.moveSelection(by: -1)
+        case UInt16(kVK_DownArrow): controller?.moveSelection(by: 1)
         case UInt16(kVK_Escape): controller?.hide()
-        default: super.keyDown(with: event)
+        default: super.sendEvent(event)
         }
     }
 }

@@ -16,6 +16,22 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertEqual(controller.state.selectedResult, clock)
     }
 
+    func testArrowSelectionStaysWithinResults() throws {
+        let clock = ApplicationCandidate(name: "Clock", url: URL(fileURLWithPath: "/Applications/Clock.app"))
+        let notes = ApplicationCandidate(name: "Notes", url: URL(fileURLWithPath: "/Applications/Notes.app"))
+        let controller = LauncherController(catalog: StubCatalog(applications: [clock, notes]), launcher: RecordingApplicationLauncher())
+        controller.invoke()
+
+        controller.moveSelection(by: 1)
+        XCTAssertEqual(controller.state.selectedResult, notes)
+
+        controller.moveSelection(by: 1)
+        XCTAssertEqual(controller.state.selectedResult, notes)
+
+        controller.moveSelection(by: -2)
+        XCTAssertEqual(controller.state.selectedResult, clock)
+    }
+
     func testSelectingAndExecutingApplicationDelegatesToTypedLauncher() throws {
         let clock = ApplicationCandidate(name: "Clock", url: URL(fileURLWithPath: "/Applications/Clock.app"))
         let notes = ApplicationCandidate(name: "Notes", url: URL(fileURLWithPath: "/Applications/Notes.app"))
