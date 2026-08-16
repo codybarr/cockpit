@@ -25,25 +25,25 @@ final class LauncherControllerTests: XCTestCase {
 
         controller.updateQuery("clock")
 
-        XCTAssertEqual(controller.state.results, [clock])
-        XCTAssertEqual(controller.state.selectedResult, clock)
+        XCTAssertEqual(controller.state.results, [.application(clock)])
+        XCTAssertEqual(controller.state.selectedResult, .application(clock))
     }
 
     func testArrowSelectionStaysWithinResults() {
-        let clock = application("Clock")
-        let notes = application("Notes")
+        let clock = application("Clock Utility")
+        let notes = application("Notes Utility")
         let controller = makeController(catalog: StubCatalog(applications: [clock, notes]))
         controller.invoke()
-        controller.updateQuery("o")
+        controller.updateQuery("utility")
 
         controller.moveSelection(by: 1)
-        XCTAssertEqual(controller.state.selectedResult, notes)
+        XCTAssertEqual(controller.state.selectedResult, .application(notes))
 
         controller.moveSelection(by: 1)
-        XCTAssertEqual(controller.state.selectedResult, notes)
+        XCTAssertEqual(controller.state.selectedResult, .application(notes))
 
         controller.moveSelection(by: -2)
-        XCTAssertEqual(controller.state.selectedResult, clock)
+        XCTAssertEqual(controller.state.selectedResult, .application(clock))
     }
 
     func testSelectingAndExecutingApplicationDelegatesToTypedLauncher() {
@@ -52,9 +52,9 @@ final class LauncherControllerTests: XCTestCase {
         let launcher = RecordingApplicationLauncher()
         let controller = makeController(catalog: StubCatalog(applications: [clock, notes]), launcher: launcher)
         controller.invoke()
-        controller.updateQuery("o")
+        controller.updateQuery("notes")
 
-        controller.selectResult(at: 1)
+        controller.selectResult(at: 0)
         controller.executeSelectedResult()
 
         XCTAssertEqual(launcher.launchedApplications, [notes])
@@ -65,6 +65,41 @@ final class LauncherControllerTests: XCTestCase {
 
         XCTAssertTrue(controller.state.query.isEmpty)
         XCTAssertTrue(controller.state.results.isEmpty)
+    }
+
+    func testQueryIncludesSystemActionsAndRanksThemWithApplicationResults() {
+        let restartUtility = application("Restart Utility")
+        let controller = makeController(catalog: StubCatalog(applications: [restartUtility]))
+        controller.invoke()
+
+        controller.updateQuery("restart")
+
+        XCTAssertEqual(controller.state.results, [.systemAction(.restart), .application(restartUtility)])
+        XCTAssertEqual(controller.state.selectedResult, .systemAction(.restart))
+    }
+
+    func testExecutingSystemActionDelegatesToTypedExecutorAndHidesLauncher() {
+        let executor = RecordingSystemActionExecutor()
+        let controller = makeController(catalog: StubCatalog(applications: []), systemActionExecutor: executor)
+        controller.invoke()
+        controller.updateQuery("lock")
+
+        controller.executeSelectedResult()
+
+        XCTAssertEqual(executor.executedActions, [.lock])
+        XCTAssertFalse(controller.state.isVisible)
+    }
+
+    func testSystemActionFailureLeavesLauncherVisibleWithAPlainError() {
+        let executor = RecordingSystemActionExecutor(error: SystemActionTestError.permissionDenied)
+        let controller = makeController(catalog: StubCatalog(applications: []), systemActionExecutor: executor)
+        controller.invoke()
+        controller.updateQuery("shut down")
+
+        controller.executeSelectedResult()
+
+        XCTAssertTrue(controller.state.isVisible)
+        XCTAssertEqual(controller.state.errorMessage, "Cockpit could not shut down: macOS denied permission to perform this System action.")
     }
 
     func testRevealDelegatesToTypedRevealerAndHidesLauncher() {
@@ -107,9 +142,15 @@ final class LauncherControllerTests: XCTestCase {
     private func makeController(
         catalog: StubCatalog,
         launcher: RecordingApplicationLauncher = RecordingApplicationLauncher(),
-        revealer: RecordingApplicationRevealer = RecordingApplicationRevealer()
+        revealer: RecordingApplicationRevealer = RecordingApplicationRevealer(),
+        systemActionExecutor: RecordingSystemActionExecutor = RecordingSystemActionExecutor()
     ) -> LauncherController {
-        LauncherController(catalog: catalog, launcher: launcher, revealer: revealer)
+        LauncherController(
+            catalog: catalog,
+            launcher: launcher,
+            revealer: revealer,
+            systemActionExecutor: systemActionExecutor
+        )
     }
 }
 
@@ -143,4 +184,25 @@ private final class RecordingApplicationRevealer: ApplicationRevealing {
     func reveal(_ application: ApplicationCandidate) throws {
         revealedApplications.append(application)
     }
+}
+
+@MainActor
+private final class RecordingSystemActionExecutor: SystemActionExecuting {
+    private(set) var executedActions: [SystemAction] = []
+    private let error: Error?
+
+    init(error: Error? = nil) {
+        self.error = error
+    }
+
+    func execute(_ action: SystemAction) throws {
+        if let error { throw error }
+        executedActions.append(action)
+    }
+}
+
+private enum SystemActionTestError: LocalizedError {
+    case permissionDenied
+
+    var errorDescription: String? { "macOS denied permission to perform this System action." }
 }

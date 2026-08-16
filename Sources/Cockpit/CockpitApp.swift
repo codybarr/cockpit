@@ -6,11 +6,13 @@ import SwiftUI
 @MainActor
 final class CockpitApp: NSObject, NSApplicationDelegate {
     private let workspaceLauncher = WorkspaceApplicationLauncher()
+    private let systemActionExecutor = MacOSSystemActionExecutor()
     private let applicationCatalog = ApplicationCatalogCache()
     private lazy var launcherController = LauncherController(
         catalog: applicationCatalog,
         launcher: workspaceLauncher,
-        revealer: workspaceLauncher
+        revealer: workspaceLauncher,
+        systemActionExecutor: systemActionExecutor
     )
     private var panelController: LauncherPanelController!
     private var hotkey: GlobalHotkey?
@@ -218,7 +220,7 @@ private struct LauncherView: View {
                     .padding(.horizontal, 20)
                     .frame(height: 48)
             } else if !controller.state.query.isEmpty && controller.state.results.isEmpty {
-                Text("No matching applications found.")
+                Text("No matching results found.")
                     .foregroundStyle(.white.opacity(0.62))
                     .padding(.horizontal, 20)
                     .frame(height: 48)
@@ -226,30 +228,16 @@ private struct LauncherView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 2) {
-                            ForEach(Array(controller.state.results.enumerated()), id: \.element.id) { index, application in
-                                Button {
+                            ForEach(Array(controller.state.results.enumerated()), id: \.element.id) { index, result in
+                                LauncherResultRow(
+                                    result: result,
+                                    isSelected: controller.state.selectedIndex == index,
+                                    isRevealHintVisible: controller.state.isRevealHintVisible
+                                ) {
                                     controller.selectResult(at: index)
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
-                                            .resizable()
-                                            .frame(width: 32, height: 32)
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(application.name).font(.system(size: 20, weight: .medium))
-                                            Text(controller.state.isRevealHintVisible ? "Reveal file in Finder" : application.url.path)
-                                                .font(.system(size: 13))
-                                                .foregroundStyle(.white.opacity(0.56))
-                                        }
-                                        Spacer()
-                                    }
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 12)
-                                    .frame(height: 60)
-                                    .background(controller.state.selectedIndex == index ? Color.white.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 6))
                                 }
-                                .buttonStyle(.plain)
                                 .simultaneousGesture(TapGesture(count: 2).onEnded(controller.executeSelectedResult))
-                                .id(application.id)
+                                .id(result.id)
                             }
                         }
                         .padding(2)
@@ -264,6 +252,55 @@ private struct LauncherView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(red: 0.10, green: 0.11, blue: 0.12))
         .onAppear { isQueryFocused = true }
+    }
+}
+
+private struct LauncherResultRow: View {
+    let result: LauncherResult
+    let isSelected: Bool
+    let isRevealHintVisible: Bool
+    let select: () -> Void
+
+    var body: some View {
+        Button(action: select) {
+            HStack(spacing: 12) {
+                resultIcon
+                    .frame(width: 32, height: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(result.label).font(.system(size: 20, weight: .medium))
+                    Text(subtitle)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.56))
+                }
+                Spacer()
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .frame(height: 60)
+            .background(isSelected ? Color.white.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var resultIcon: some View {
+        switch result {
+        case let .application(application):
+            Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
+                .resizable()
+        case let .systemAction(action):
+            Image(systemName: action.symbolName)
+                .font(.system(size: 26))
+        }
+    }
+
+    private var subtitle: String {
+        switch result {
+        case let .application(application):
+            isRevealHintVisible ? "Reveal file in Finder" : application.url.path
+        case .systemAction:
+            "System action"
+        }
     }
 }
 

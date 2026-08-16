@@ -11,20 +11,20 @@ struct ApplicationSearch {
         static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
     }
 
-    func ranked(_ applications: [ApplicationCandidate], for query: String, usageScore: (ApplicationCandidate) -> Int = { _ in 0 }) -> [ApplicationCandidate] {
+    func ranked<Result: LauncherSearchable>(_ results: [Result], for query: String, usageScore: (Result) -> Int = { _ in 0 }) -> [Result] {
         let tokens = normalizedTokens(in: query)
         guard !tokens.isEmpty else { return [] }
 
-        let ranked: [RankedApplication] = applications.enumerated().compactMap { index, application in
-            guard let quality = matchQuality(for: application.name, tokens: tokens) else { return nil }
-            return RankedApplication(application: application, quality: quality, usageScore: usageScore(application), originalIndex: index)
+        let ranked = results.enumerated().compactMap { index, result -> RankedResult<Result>? in
+            guard let quality = matchQuality(for: result.searchLabel, tokens: tokens) else { return nil }
+            return RankedResult(result: result, quality: quality, usageScore: usageScore(result), originalIndex: index)
         }
         return ranked.sorted { lhs, rhs in
             if lhs.quality != rhs.quality { return lhs.quality < rhs.quality }
             if lhs.usageScore != rhs.usageScore { return lhs.usageScore > rhs.usageScore }
             return lhs.originalIndex < rhs.originalIndex
         }
-        .map(\.application)
+        .map(\.result)
     }
 
     private func matchQuality(for name: String, tokens: [String]) -> MatchQuality? {
@@ -76,8 +76,8 @@ struct ApplicationSearch {
         return true
     }
 
-    private struct RankedApplication {
-        let application: ApplicationCandidate
+    private struct RankedResult<Result> {
+        let result: Result
         let quality: MatchQuality
         let usageScore: Int
         let originalIndex: Int

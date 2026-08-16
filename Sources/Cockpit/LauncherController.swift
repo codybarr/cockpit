@@ -37,12 +37,12 @@ final class InMemoryApplicationUseTracker: ApplicationUseTracking {
 struct LauncherState: Equatable {
     var isVisible = false
     var query = ""
-    var results: [ApplicationCandidate] = []
+    var results: [LauncherResult] = []
     var selectedIndex: Int?
     var isRevealHintVisible = false
     var errorMessage: String?
 
-    var selectedResult: ApplicationCandidate? {
+    var selectedResult: LauncherResult? {
         guard let selectedIndex, results.indices.contains(selectedIndex) else { return nil }
         return results[selectedIndex]
     }
@@ -53,6 +53,7 @@ final class LauncherController: ObservableObject {
     private let catalog: any ApplicationCataloging
     private let launcher: any ApplicationLaunching
     private let revealer: any ApplicationRevealing
+    private let systemActionExecutor: any SystemActionExecuting
     private let useTracker: any ApplicationUseTracking
     private let search: ApplicationSearch
     @Published private(set) var state = LauncherState()
@@ -61,12 +62,14 @@ final class LauncherController: ObservableObject {
         catalog: any ApplicationCataloging,
         launcher: any ApplicationLaunching,
         revealer: any ApplicationRevealing,
+        systemActionExecutor: any SystemActionExecuting,
         useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker(),
         search: ApplicationSearch = ApplicationSearch()
     ) {
         self.catalog = catalog
         self.launcher = launcher
         self.revealer = revealer
+        self.systemActionExecutor = systemActionExecutor
         self.useTracker = useTracker
         self.search = search
     }
@@ -86,7 +89,12 @@ final class LauncherController: ObservableObject {
         }
 
         do {
-            state.results = search.ranked(try catalog.scan(), for: query, usageScore: useTracker.score)
+            let applications = try catalog.scan().map(LauncherResult.application)
+            let systemActions = SystemAction.allCases.map(LauncherResult.systemAction)
+            state.results = search.ranked(applications + systemActions, for: query) { result in
+                guard case let .application(application) = result else { return 0 }
+                return self.useTracker.score(for: application)
+            }
             state.selectedIndex = state.results.isEmpty ? nil : 0
         } catch {
             state.results = []
@@ -117,22 +125,29 @@ final class LauncherController: ObservableObject {
         guard let selectedResult = state.selectedResult else { return }
 
         do {
-            try launcher.launch(selectedResult)
-            useTracker.recordLaunch(of: selectedResult)
+            switch selectedResult {
+            case let .application(application):
+                try launcher.launch(application)
+                useTracker.recordLaunch(of: application)
+            case let .systemAction(action):
+                try systemActionExecutor.execute(action)
+            }
             dismiss()
         } catch {
-            state.errorMessage = "Cockpit could not open \(selectedResult.name): \(error.localizedDescription)"
+            state.errorMessage = "Cockpit could not \(selectedResult.label.lowercased()): \(error.localizedDescription)"
         }
     }
 
     func revealSelectedResult() {
         guard let selectedResult = state.selectedResult else { return }
 
+        guard case let .application(application) = selectedResult else { return }
+
         do {
-            try revealer.reveal(selectedResult)
+            try revealer.reveal(application)
             dismiss()
         } catch {
-            state.errorMessage = "Cockpit could not reveal \(selectedResult.name): \(error.localizedDescription)"
+            state.errorMessage = "Cockpit could not reveal \(application.name): \(error.localizedDescription)"
         }
     }
 }
