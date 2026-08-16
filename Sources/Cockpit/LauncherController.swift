@@ -61,6 +61,14 @@ struct LauncherState: Equatable {
         guard let selectedIndex, results.indices.contains(selectedIndex) else { return nil }
         return results[selectedIndex]
     }
+
+    var contentHeight: CGFloat {
+        if errorMessage != nil || (!query.isEmpty && results.isEmpty) {
+            return 128
+        }
+        guard !results.isEmpty else { return 76 }
+        return 76 + min(CGFloat(results.count) * 60 + 4, 364)
+    }
 }
 
 @MainActor

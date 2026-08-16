@@ -55,6 +55,26 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertEqual(controller.state.selectedResult, .application(clock))
     }
 
+    func testClearingAFileSearchRestoresTheEmptyLauncherHeight() {
+        let files = (1...7).map { number in
+            FilenameCandidate(url: URL(fileURLWithPath: "/Users/cody/Documents/Report \(number).md"))
+        }
+        let controller = makeController(
+            catalog: StubCatalog(applications: []),
+            filenameIndex: StubFilenameIndex(files: files)
+        )
+        controller.invoke()
+
+        controller.updateQuery("'report")
+        XCTAssertEqual(controller.state.results.count, 7)
+        XCTAssertEqual(controller.state.contentHeight, 440)
+
+        controller.updateQuery("")
+
+        XCTAssertTrue(controller.state.results.isEmpty)
+        XCTAssertEqual(controller.state.contentHeight, 76)
+    }
+
     func testApostropheQuerySearchesIndexedFilenamesAndOpensOrRevealsTheSelectedFile() {
         let file = FilenameCandidate(url: URL(fileURLWithPath: "/Users/cody/Projects/Meeting Notes.md"))
         let opener = RecordingFileOpener()

@@ -151,6 +151,7 @@ private final class LauncherPanelController {
     private let controller: LauncherController
     private let panel: LauncherPanel
     private var stateObserver: Any?
+    private var pendingResize: DispatchWorkItem?
 
     init(controller: LauncherController) {
         self.controller = controller
@@ -169,8 +170,8 @@ private final class LauncherPanelController {
         panel.backgroundColor = .clear
         panel.hasShadow = true
         panel.contentView = NSHostingView(rootView: LauncherView(controller: controller))
-        stateObserver = controller.$state.sink { [weak self] state in
-            self?.resize(for: state)
+        stateObserver = controller.$state.sink { [weak self] _ in
+            self?.scheduleResize()
         }
     }
 
@@ -207,14 +208,18 @@ private final class LauncherPanelController {
         panel.orderOut(nil)
     }
 
-    private func resize(for state: LauncherState, preservingTopEdge: Bool = true) {
-        let resultCount = state.results.count
-        let contentHeight: CGFloat
-        if state.errorMessage != nil || (!state.query.isEmpty && resultCount == 0) {
-            contentHeight = 128
-        } else {
-            contentHeight = 76 + min(CGFloat(resultCount) * 60 + 4, 364)
+    private func scheduleResize() {
+        pendingResize?.cancel()
+        let resize = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.resize(for: self.controller.state)
         }
+        pendingResize = resize
+        DispatchQueue.main.async(execute: resize)
+    }
+
+    private func resize(for state: LauncherState, preservingTopEdge: Bool = true) {
+        let contentHeight = state.contentHeight
 
         // Selection changes do not affect the launcher's dimensions. Avoid resetting the
         // panel frame for them, as even an identical AppKit frame update can cause a
