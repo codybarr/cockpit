@@ -3,6 +3,29 @@ import XCTest
 @testable import Cockpit
 
 final class FileSystemUpdatesTests: XCTestCase {
+    func testFilenameIndexReconcilesFilesCreatedWhileCockpitWasNotRunning() throws {
+        let root = try makeTemporaryDirectory()
+        let databaseDirectory = try makeTemporaryDirectory()
+        defer {
+            try? FileManager.default.removeItem(at: root)
+            try? FileManager.default.removeItem(at: databaseDirectory)
+        }
+        let databaseURL = databaseDirectory.appending(path: "index.sqlite")
+        do {
+            let index = try FilenameIndex(databaseURL: databaseURL, events: ControllableFileSystemEvents())
+            try index.addIndexedFolder(root)
+        }
+        try "bargle".write(to: root.appending(path: "bargle.txt"), atomically: true, encoding: .utf8)
+
+        let restartedIndex = try FilenameIndex(databaseURL: databaseURL, events: ControllableFileSystemEvents())
+        let deadline = Date().addingTimeInterval(1)
+        while try restartedIndex.matches(for: "bargle").isEmpty, Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
+        }
+
+        XCTAssertEqual(try restartedIndex.matches(for: "bargle").map(\.name), ["bargle.txt"])
+    }
+
     func testApplicationCatalogRefreshesAfterAFilesystemChange() throws {
         let app = ApplicationCandidate(name: "Example", url: URL(fileURLWithPath: "/Applications/Example.app"))
         let catalog = MutableCatalog(applications: [])

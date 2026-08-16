@@ -59,6 +59,7 @@ final class FilenameIndex: FilenameIndexing, @unchecked Sendable {
         try execute("CREATE INDEX IF NOT EXISTS filenames_filename ON filenames(filename)")
         try rebuildSnapshot()
         startWatching()
+        reconcilePersistedFoldersInBackground()
     }
 
     deinit {
@@ -167,6 +168,13 @@ final class FilenameIndex: FilenameIndexing, @unchecked Sendable {
     private func startWatching() {
         events.startWatching(paths: indexedFolders) { [weak self] changes in
             self?.handle(changes)
+        }
+    }
+
+    private func reconcilePersistedFoldersInBackground() {
+        let folders = indexedFolders
+        DispatchQueue.global(qos: .utility).async { [weak self, folders] in
+            folders.forEach { self?.refresh($0) }
         }
     }
 
