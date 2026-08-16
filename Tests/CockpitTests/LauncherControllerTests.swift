@@ -28,10 +28,15 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertNil(controller.state.selectedResult)
     }
 
-    func testLeadingSpaceStartsFilenameSearch() {
+    func testLeadingSpaceAlwaysStartsFilenameSearchAfterClearingAQuery() {
         let controller = makeController(catalog: StubCatalog(applications: []))
         controller.invoke()
 
+        controller.updateQuery(" ")
+        XCTAssertEqual(controller.state.query, "'")
+
+        controller.updateQuery("'report")
+        controller.updateQuery("")
         controller.updateQuery(" ")
 
         XCTAssertEqual(controller.state.query, "'")
