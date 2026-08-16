@@ -107,6 +107,7 @@ final class LauncherController: ObservableObject {
     }
 
     func updateQuery(_ query: String) {
+        let query = isAwaitingFirstQueryCharacter && query == " " ? "'" : query
         isAwaitingFirstQueryCharacter = false
         state.query = query
         state.errorMessage = nil

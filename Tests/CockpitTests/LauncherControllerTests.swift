@@ -28,6 +28,16 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertNil(controller.state.selectedResult)
     }
 
+    func testLeadingSpaceStartsFilenameSearch() {
+        let controller = makeController(catalog: StubCatalog(applications: []))
+        controller.invoke()
+
+        controller.updateQuery(" ")
+
+        XCTAssertEqual(controller.state.query, "'")
+        XCTAssertTrue(controller.state.results.isEmpty)
+    }
+
     func testQueryingRanksApplicationsAndSelectsTheBestResult() {
         let clock = application("Clock")
         let calendar = application("Calendar")
