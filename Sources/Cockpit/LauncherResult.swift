@@ -2,12 +2,14 @@ import Foundation
 
 enum LauncherResult: Equatable, Sendable, Identifiable {
     case application(ApplicationCandidate)
+    case systemSettingsPane(SystemSettingsPane)
     case file(FilenameCandidate)
     case systemAction(SystemAction)
 
     var id: String {
         switch self {
         case let .application(application): "application:\(application.url.absoluteString)"
+        case let .systemSettingsPane(pane): "system-settings-pane:\(pane.identifier)"
         case let .file(file): "file:\(file.url.absoluteString)"
         case let .systemAction(action): "system-action:\(action.rawValue)"
         }
@@ -16,6 +18,7 @@ enum LauncherResult: Equatable, Sendable, Identifiable {
     var label: String {
         switch self {
         case let .application(application): application.name
+        case let .systemSettingsPane(pane): pane.name
         case let .file(file): file.name
         case let .systemAction(action): action.label
         }
@@ -48,6 +51,7 @@ extension LauncherResult: LauncherSearchable {
     var normalizedSearchLabel: String {
         switch self {
         case let .application(application): application.normalizedName
+        case let .systemSettingsPane(pane): pane.normalizedSearchLabel
         case let .file(file): file.normalizedName
         case .systemAction: SearchNormalizer.normalize(label)
         }

@@ -22,6 +22,7 @@ final class PerformanceBenchmarks: XCTestCase {
             catalog: EmptyCatalog(),
             launcher: NoopWorkspace(),
             revealer: NoopWorkspace(),
+            systemSettingsPaneLauncher: NoopWorkspace(),
             systemActionExecutor: NoopSystemActionExecutor(),
             filenameIndex: EmptyFilenameIndex(),
             fileOpener: NoopWorkspace(),
@@ -59,8 +60,9 @@ private final class EmptyCatalog: ApplicationCataloging {
 }
 
 @MainActor
-private final class NoopWorkspace: ApplicationLaunching, ApplicationRevealing, FileOpening, FileRevealing {
+private final class NoopWorkspace: ApplicationLaunching, ApplicationRevealing, SystemSettingsPaneLaunching, FileOpening, FileRevealing {
     func launch(_: ApplicationCandidate) throws {}
+    func launch(_: SystemSettingsPane) throws {}
     func reveal(_: ApplicationCandidate) throws {}
     func open(_: FilenameCandidate) throws {}
     func reveal(_: FilenameCandidate) throws {}

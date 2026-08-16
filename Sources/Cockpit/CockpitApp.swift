@@ -14,6 +14,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
         catalog: applicationCatalog,
         launcher: workspaceLauncher,
         revealer: workspaceLauncher,
+        systemSettingsPaneLauncher: workspaceLauncher,
         systemActionExecutor: systemActionExecutor,
         filenameIndex: filenameIndex,
         fileOpener: workspaceLauncher,
@@ -107,7 +108,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 }
 
 @MainActor
-final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevealing, FileOpening, FileRevealing {
+final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevealing, SystemSettingsPaneLaunching, FileOpening, FileRevealing {
     func launch(_ application: ApplicationCandidate) throws {
         guard NSWorkspace.shared.open(application.url) else {
             throw ApplicationError.unavailable
@@ -116,6 +117,13 @@ final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevea
 
     func reveal(_ application: ApplicationCandidate) throws {
         try revealURL(application.url)
+    }
+
+    func launch(_ pane: SystemSettingsPane) throws {
+        guard FileManager.default.fileExists(atPath: "/System/Applications/System Settings.app"),
+              NSWorkspace.shared.open(pane.destinationURL) else {
+            throw ApplicationError.unavailable
+        }
     }
 
     func open(_ file: FilenameCandidate) throws {
@@ -341,6 +349,21 @@ private struct LauncherResultRow: View {
         case let .application(application):
             Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
                 .resizable()
+        case let .systemSettingsPane(pane):
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.white.opacity(0.10))
+                if let resourcePath = pane.icon.resourcePath, let image = NSImage(contentsOfFile: resourcePath) {
+                    Image(nsImage: image)
+                        .resizable()
+                        .padding(4)
+                } else {
+                    Image(systemName: pane.icon.symbolName)
+                        .font(.system(size: 23, weight: .medium))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(paneIconColor(pane.icon.color))
+                }
+            }
         case let .file(file):
             Image(nsImage: NSWorkspace.shared.icon(forFile: file.url.path))
                 .resizable()
@@ -350,10 +373,23 @@ private struct LauncherResultRow: View {
         }
     }
 
+    private func paneIconColor(_ color: SystemSettingsPaneIcon.Color) -> Color {
+        switch color {
+        case .blue: .blue
+        case .cyan: .cyan
+        case .green: .green
+        case .gray: .gray
+        case .indigo: .indigo
+        case .red: .red
+        }
+    }
+
     private var subtitle: String {
         switch result {
         case let .application(application):
             isRevealHintVisible ? "Reveal file in Finder" : application.url.path
+        case .systemSettingsPane:
+            "System Settings"
         case let .file(file):
             isRevealHintVisible ? "Reveal file in Finder" : file.url.path
         case .systemAction:

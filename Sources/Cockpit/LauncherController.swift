@@ -16,6 +16,11 @@ protocol ApplicationRevealing: AnyObject {
 }
 
 @MainActor
+protocol SystemSettingsPaneLaunching: AnyObject {
+    func launch(_ pane: SystemSettingsPane) throws
+}
+
+@MainActor
 protocol FileOpening: AnyObject {
     func open(_ file: FilenameCandidate) throws
 }
@@ -63,6 +68,8 @@ final class LauncherController: ObservableObject {
     private let catalog: any ApplicationCataloging
     private let launcher: any ApplicationLaunching
     private let revealer: any ApplicationRevealing
+    private let systemSettingsPaneCatalog: any SystemSettingsPaneCataloging
+    private let systemSettingsPaneLauncher: any SystemSettingsPaneLaunching
     private let systemActionExecutor: any SystemActionExecuting
     private let filenameIndex: any FilenameIndexing
     private let fileOpener: any FileOpening
@@ -75,6 +82,8 @@ final class LauncherController: ObservableObject {
         catalog: any ApplicationCataloging,
         launcher: any ApplicationLaunching,
         revealer: any ApplicationRevealing,
+        systemSettingsPaneCatalog: any SystemSettingsPaneCataloging = SystemSettingsPaneCatalog(),
+        systemSettingsPaneLauncher: any SystemSettingsPaneLaunching,
         systemActionExecutor: any SystemActionExecuting,
         filenameIndex: any FilenameIndexing,
         fileOpener: any FileOpening,
@@ -85,6 +94,8 @@ final class LauncherController: ObservableObject {
         self.catalog = catalog
         self.launcher = launcher
         self.revealer = revealer
+        self.systemSettingsPaneCatalog = systemSettingsPaneCatalog
+        self.systemSettingsPaneLauncher = systemSettingsPaneLauncher
         self.systemActionExecutor = systemActionExecutor
         self.filenameIndex = filenameIndex
         self.fileOpener = fileOpener
@@ -123,8 +134,9 @@ final class LauncherController: ObservableObject {
                 state.results = search.ranked(try filenameIndex.matches(for: filenameQuery).map(LauncherResult.file), for: filenameQuery)
             } else {
                 let applications = try catalog.scan().map(LauncherResult.application)
+                let panes = systemSettingsPaneCatalog.panes().map(LauncherResult.systemSettingsPane)
                 let systemActions = SystemAction.allCases.map(LauncherResult.systemAction)
-                state.results = search.ranked(applications + systemActions, for: query) { result in
+                state.results = search.ranked(applications + panes + systemActions, for: query) { result in
                     guard case let .application(application) = result else { return 0 }
                     return self.useTracker.score(for: application)
                 }
@@ -163,6 +175,8 @@ final class LauncherController: ObservableObject {
             case let .application(application):
                 try launcher.launch(application)
                 useTracker.recordLaunch(of: application)
+            case let .systemSettingsPane(pane):
+                try systemSettingsPaneLauncher.launch(pane)
             case let .file(file):
                 try fileOpener.open(file)
             case let .systemAction(action):
@@ -180,6 +194,7 @@ final class LauncherController: ObservableObject {
         do {
             switch selectedResult {
             case let .application(application): try revealer.reveal(application)
+            case .systemSettingsPane: return
             case let .file(file): try fileRevealer.reveal(file)
             case .systemAction: return
             }

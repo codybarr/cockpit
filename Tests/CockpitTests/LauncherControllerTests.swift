@@ -120,6 +120,25 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertTrue(controller.state.results.isEmpty)
     }
 
+    func testQueryingSystemSettingsPaneShowsItAlongsideSystemSettingsAndLaunchesItsDestination() {
+        let systemSettings = application("System Settings")
+        let displays = SystemSettingsPane(name: "Displays", identifier: "com.apple.Displays-Settings.extension")
+        let paneLauncher = RecordingSystemSettingsPaneLauncher()
+        let controller = makeController(
+            catalog: StubCatalog(applications: [systemSettings]),
+            systemSettingsPaneCatalog: StubSystemSettingsPaneCatalog(panes: [displays]),
+            systemSettingsPaneLauncher: paneLauncher
+        )
+        controller.invoke()
+
+        controller.updateQuery("displays")
+        XCTAssertEqual(controller.state.results, [.systemSettingsPane(displays)])
+
+        controller.executeSelectedResult()
+        XCTAssertEqual(paneLauncher.launchedPanes, [displays])
+        XCTAssertFalse(controller.state.isVisible)
+    }
+
     func testQueryIncludesSystemActionsAndRanksThemWithApplicationResults() {
         let restartUtility = application("Restart Utility")
         let controller = makeController(catalog: StubCatalog(applications: [restartUtility]))
@@ -196,6 +215,8 @@ final class LauncherControllerTests: XCTestCase {
         catalog: StubCatalog,
         launcher: RecordingApplicationLauncher = RecordingApplicationLauncher(),
         revealer: RecordingApplicationRevealer = RecordingApplicationRevealer(),
+        systemSettingsPaneCatalog: StubSystemSettingsPaneCatalog = StubSystemSettingsPaneCatalog(panes: []),
+        systemSettingsPaneLauncher: RecordingSystemSettingsPaneLauncher = RecordingSystemSettingsPaneLauncher(),
         systemActionExecutor: RecordingSystemActionExecutor = RecordingSystemActionExecutor(),
         filenameIndex: StubFilenameIndex = StubFilenameIndex(files: []),
         fileOpener: RecordingFileOpener = RecordingFileOpener(),
@@ -205,6 +226,8 @@ final class LauncherControllerTests: XCTestCase {
             catalog: catalog,
             launcher: launcher,
             revealer: revealer,
+            systemSettingsPaneCatalog: systemSettingsPaneCatalog,
+            systemSettingsPaneLauncher: systemSettingsPaneLauncher,
             systemActionExecutor: systemActionExecutor,
             filenameIndex: filenameIndex,
             fileOpener: fileOpener,
@@ -250,6 +273,19 @@ private final class StubCatalog: ApplicationCataloging, @unchecked Sendable {
         scanCount += 1
         return applications
     }
+}
+
+private struct StubSystemSettingsPaneCatalog: SystemSettingsPaneCataloging {
+    let availablePanes: [SystemSettingsPane]
+
+    init(panes: [SystemSettingsPane]) { availablePanes = panes }
+    func panes() -> [SystemSettingsPane] { availablePanes }
+}
+
+@MainActor
+private final class RecordingSystemSettingsPaneLauncher: SystemSettingsPaneLaunching {
+    private(set) var launchedPanes: [SystemSettingsPane] = []
+    func launch(_ pane: SystemSettingsPane) throws { launchedPanes.append(pane) }
 }
 
 @MainActor

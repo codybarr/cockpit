@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import XCTest
 @testable import Cockpit
@@ -34,6 +35,35 @@ final class ApplicationCatalogTests: XCTestCase {
 
     func testStandardRootsExcludeSystemLibrary() {
         XCTAssertFalse(ApplicationCatalog.standardRoots.contains { $0.path.hasPrefix("/System/Library") })
+    }
+
+    func testSystemSettingsPaneCatalogDoesNotReturnDestinationsWhenSystemSettingsIsUnavailable() {
+        let catalog = SystemSettingsPaneCatalog(systemSettingsURL: URL(fileURLWithPath: "/missing/System Settings.app"))
+
+        XCTAssertEqual(catalog.panes(), [])
+    }
+
+    func testEverySystemSettingsPaneHasAnAvailableIcon() {
+        for pane in SystemSettingsPaneCatalog.supportedPanes {
+            let icon = pane.icon
+            if let resourcePath = icon.resourcePath {
+                XCTAssertNotNil(NSImage(contentsOfFile: resourcePath), "\(pane.name) resource icon is unavailable")
+            } else {
+                XCTAssertNotNil(NSImage(systemSymbolName: icon.symbolName, accessibilityDescription: nil), "\(pane.name) uses an unavailable symbol: \(icon.symbolName)")
+            }
+        }
+    }
+
+    func testSystemSettingsPaneCatalogIncludesReferencePanes() {
+        let panes = SystemSettingsPaneCatalog.supportedPanes
+
+        XCTAssertTrue(panes.contains { $0.name == "About" })
+        XCTAssertTrue(panes.contains { $0.name == "Accessibility" })
+        XCTAssertTrue(panes.contains { $0.name == "Displays" })
+        XCTAssertTrue(panes.contains { $0.name == "Login Items & Extensions" })
+        XCTAssertTrue(panes.contains { $0.name == "Bluetooth" })
+        XCTAssertTrue(panes.contains { $0.name == "Privacy & Security" })
+        XCTAssertTrue(panes.contains { $0.name == "Wi-Fi" })
     }
 
     private func makeTemporaryDirectory() throws -> URL {
