@@ -82,7 +82,7 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertEqual(revealer.revealedFiles, [file])
     }
 
-    func testArrowSelectionStaysWithinResults() {
+    func testArrowSelectionWrapsAroundResults() {
         let clock = application("Clock Utility")
         let notes = application("Notes Utility")
         let controller = makeController(catalog: StubCatalog(applications: [clock, notes]))
@@ -93,10 +93,10 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertEqual(controller.state.selectedResult, .application(notes))
 
         controller.moveSelection(by: 1)
-        XCTAssertEqual(controller.state.selectedResult, .application(notes))
-
-        controller.moveSelection(by: -2)
         XCTAssertEqual(controller.state.selectedResult, .application(clock))
+
+        controller.moveSelection(by: -1)
+        XCTAssertEqual(controller.state.selectedResult, .application(notes))
     }
 
     func testSelectingAndExecutingApplicationDelegatesToTypedLauncher() {

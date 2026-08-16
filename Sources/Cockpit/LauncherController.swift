@@ -160,7 +160,10 @@ final class LauncherController: ObservableObject {
 
     func moveSelection(by offset: Int) {
         guard let selectedIndex = state.selectedIndex, !state.results.isEmpty else { return }
-        state.selectedIndex = min(max(selectedIndex + offset, state.results.startIndex), state.results.index(before: state.results.endIndex))
+
+        let resultCount = state.results.count
+        let wrappedIndex = (selectedIndex + offset) % resultCount
+        state.selectedIndex = wrappedIndex >= 0 ? wrappedIndex : wrappedIndex + resultCount
     }
 
     func setRevealHintVisible(_ isVisible: Bool) {

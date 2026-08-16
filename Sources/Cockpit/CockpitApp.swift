@@ -216,6 +216,13 @@ private final class LauncherPanelController {
             contentHeight = 76 + min(CGFloat(resultCount) * 60 + 4, 364)
         }
 
+        // Selection changes do not affect the launcher's dimensions. Avoid resetting the
+        // panel frame for them, as even an identical AppKit frame update can cause a
+        // perceptible one-pixel redraw shift.
+        if preservingTopEdge, panel.isVisible, panel.contentView?.bounds.height == contentHeight {
+            return
+        }
+
         let oldFrame = panel.frame
         let frame = NSRect(x: oldFrame.minX, y: oldFrame.maxY - contentHeight, width: 680, height: contentHeight)
         if preservingTopEdge, panel.isVisible {
@@ -305,7 +312,7 @@ private struct LauncherView: View {
                     }
                     .onChange(of: controller.state.selectedIndex) { _ in
                         guard let selectedResult = controller.state.selectedResult else { return }
-                        proxy.scrollTo(selectedResult.id, anchor: .center)
+                        proxy.scrollTo(selectedResult.id)
                     }
                 }
             }
@@ -338,7 +345,11 @@ private struct LauncherResultRow: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 13)
             .frame(height: 60)
-            .background(isSelected ? Color(red: 0.19, green: 0.40, blue: 0.55) : .clear)
+            .background {
+                RoundedRectangle(cornerRadius: 0)
+                    .fill(Color(red: 0.19, green: 0.40, blue: 0.55))
+                    .opacity(isSelected ? 1 : 0)
+            }
         }
         .buttonStyle(.plain)
     }
