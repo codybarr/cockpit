@@ -5,9 +5,12 @@ import SwiftUI
 @main
 @MainActor
 final class CockpitApp: NSObject, NSApplicationDelegate {
-    private let launcherController = LauncherController(
-        catalog: ApplicationCatalog(),
-        launcher: WorkspaceApplicationLauncher()
+    private let workspaceLauncher = WorkspaceApplicationLauncher()
+    private let applicationCatalog = ApplicationCatalogCache()
+    private lazy var launcherController = LauncherController(
+        catalog: applicationCatalog,
+        launcher: workspaceLauncher,
+        revealer: workspaceLauncher
     )
     private var panelController: LauncherPanelController!
     private var hotkey: GlobalHotkey?
@@ -22,6 +25,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        applicationCatalog.refreshInBackground()
         panelController = LauncherPanelController(controller: launcherController)
         installStatusItem()
 
@@ -63,14 +67,21 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
 }
 
 @MainActor
-final class WorkspaceApplicationLauncher: ApplicationLaunching {
+final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevealing {
     func launch(_ application: ApplicationCandidate) throws {
         guard NSWorkspace.shared.open(application.url) else {
-            throw ApplicationLaunchError.unavailable
+            throw ApplicationError.unavailable
         }
     }
 
-    private enum ApplicationLaunchError: LocalizedError {
+    func reveal(_ application: ApplicationCandidate) throws {
+        guard FileManager.default.fileExists(atPath: application.url.path) else {
+            throw ApplicationError.unavailable
+        }
+        NSWorkspace.shared.activateFileViewerSelecting([application.url])
+    }
+
+    private enum ApplicationError: LocalizedError {
         case unavailable
 
         var errorDescription: String? { "The application is no longer available." }
@@ -81,11 +92,12 @@ final class WorkspaceApplicationLauncher: ApplicationLaunching {
 private final class LauncherPanelController {
     private let controller: LauncherController
     private let panel: LauncherPanel
+    private var stateObserver: Any?
 
     init(controller: LauncherController) {
         self.controller = controller
         panel = LauncherPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 720, height: 430),
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 76),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -94,48 +106,62 @@ private final class LauncherPanelController {
         panel.isFloatingPanel = true
         panel.level = .statusBar
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
-        panel.isMovableByWindowBackground = true
+        panel.isMovable = false
+        panel.isMovableByWindowBackground = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
-        panel.contentView = NSHostingView(rootView: LauncherView(state: controller.state, select: { _ in }, execute: {}))
+        panel.contentView = NSHostingView(rootView: LauncherView(controller: controller))
+        stateObserver = controller.$state.sink { [weak self] state in
+            self?.resize(for: state)
+        }
     }
 
     func present() {
-        render()
-        panel.center()
+        resize(for: controller.state, preservingTopEdge: false)
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
     }
 
-    fileprivate func selectResult(at index: Int) {
-        controller.selectResult(at: index)
-        render()
-    }
-
     fileprivate func moveSelection(by offset: Int) {
         controller.moveSelection(by: offset)
-        render()
+    }
+
+    fileprivate func setRevealHintVisible(_ isVisible: Bool) {
+        controller.setRevealHintVisible(isVisible)
     }
 
     fileprivate func executeSelection() {
         controller.executeSelectedResult()
-        if controller.state.isVisible {
-            render()
-        } else {
-            panel.orderOut(nil)
-        }
+        if !controller.state.isVisible { panel.orderOut(nil) }
+    }
+
+    fileprivate func revealSelection() {
+        controller.revealSelectedResult()
+        if !controller.state.isVisible { panel.orderOut(nil) }
     }
 
     fileprivate func hide() {
+        controller.dismiss()
         panel.orderOut(nil)
     }
 
-    private func render() {
-        panel.contentView = NSHostingView(rootView: LauncherView(
-            state: controller.state,
-            select: { [weak self] index in self?.selectResult(at: index) },
-            execute: { [weak self] in self?.executeSelection() }
-        ))
+    private func resize(for state: LauncherState, preservingTopEdge: Bool = true) {
+        let resultCount = state.results.count
+        let contentHeight: CGFloat
+        if state.errorMessage != nil || (!state.query.isEmpty && resultCount == 0) {
+            contentHeight = 128
+        } else {
+            contentHeight = 76 + min(CGFloat(resultCount) * 60 + 4, 364)
+        }
+
+        let oldFrame = panel.frame
+        let frame = NSRect(x: oldFrame.minX, y: oldFrame.maxY - contentHeight, width: 680, height: contentHeight)
+        if preservingTopEdge, panel.isVisible {
+            panel.setFrame(frame, display: true, animate: false)
+        } else {
+            panel.setContentSize(frame.size)
+            panel.center()
+        }
     }
 }
 
@@ -146,12 +172,20 @@ private final class LauncherPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 
     override func sendEvent(_ event: NSEvent) {
+        if event.type == .flagsChanged {
+            controller?.setRevealHintVisible(event.modifierFlags.contains(.command))
+            return
+        }
+
         guard event.type == .keyDown else {
             super.sendEvent(event)
             return
         }
 
         switch event.keyCode {
+        case UInt16(kVK_ANSI_A) where event.modifierFlags.contains(.command):
+            NSApp.sendAction(#selector(NSResponder.selectAll(_:)), to: nil, from: self)
+        case UInt16(kVK_Return) where event.modifierFlags.contains(.command): controller?.revealSelection()
         case UInt16(kVK_Return): controller?.executeSelection()
         case UInt16(kVK_UpArrow): controller?.moveSelection(by: -1)
         case UInt16(kVK_DownArrow): controller?.moveSelection(by: 1)
@@ -162,68 +196,74 @@ private final class LauncherPanel: NSPanel {
 }
 
 private struct LauncherView: View {
-    let state: LauncherState
-    let select: (Int) -> Void
-    let execute: () -> Void
+    @ObservedObject var controller: LauncherController
+    @FocusState private var isQueryFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Cockpit")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.72))
-                .padding(.horizontal, 28)
-                .padding(.vertical, 19)
+            TextField("", text: Binding(
+                get: { controller.state.query },
+                set: { query in controller.updateQuery(query) }
+            ))
+            .focused($isQueryFocused)
+            .textFieldStyle(.plain)
+            .font(.system(size: 42, weight: .regular))
+            .foregroundStyle(.white)
+            .padding(14)
+            .frame(height: 76)
 
-            if let errorMessage = state.errorMessage {
+            if let errorMessage = controller.state.errorMessage {
                 Text(errorMessage)
                     .foregroundStyle(.red.opacity(0.9))
-                    .padding(28)
-            } else if state.results.isEmpty {
-                Text("No applications found in the standard application folders.")
+                    .padding(.horizontal, 20)
+                    .frame(height: 48)
+            } else if !controller.state.query.isEmpty && controller.state.results.isEmpty {
+                Text("No matching applications found.")
                     .foregroundStyle(.white.opacity(0.62))
-                    .padding(28)
-            } else {
+                    .padding(.horizontal, 20)
+                    .frame(height: 48)
+            } else if !controller.state.results.isEmpty {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack(spacing: 4) {
-                            ForEach(Array(state.results.enumerated()), id: \.element.id) { index, application in
+                        LazyVStack(spacing: 2) {
+                            ForEach(Array(controller.state.results.enumerated()), id: \.element.id) { index, application in
                                 Button {
-                                    select(index)
+                                    controller.selectResult(at: index)
                                 } label: {
-                                    HStack(spacing: 14) {
+                                    HStack(spacing: 12) {
                                         Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
                                             .resizable()
                                             .frame(width: 32, height: 32)
-                                        VStack(alignment: .leading, spacing: 3) {
-                                            Text(application.name).font(.system(size: 17, weight: .medium))
-                                            Text(application.url.path).font(.system(size: 12)).foregroundStyle(.white.opacity(0.56))
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(application.name).font(.system(size: 20, weight: .medium))
+                                            Text(controller.state.isRevealHintVisible ? "Reveal file in Finder" : application.url.path)
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(.white.opacity(0.56))
                                         }
                                         Spacer()
                                     }
                                     .foregroundStyle(.white)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 10)
-                                    .background(state.selectedIndex == index ? Color.white.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 7))
+                                    .padding(.horizontal, 12)
+                                    .frame(height: 60)
+                                    .background(controller.state.selectedIndex == index ? Color.white.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 6))
                                 }
                                 .buttonStyle(.plain)
-                                .simultaneousGesture(TapGesture(count: 2).onEnded(execute))
+                                .simultaneousGesture(TapGesture(count: 2).onEnded(controller.executeSelectedResult))
                                 .id(application.id)
                             }
                         }
-                        .padding(10)
+                        .padding(2)
                     }
-                    .onAppear { scrollToSelection(using: proxy) }
-                    .onChange(of: state.selectedIndex) { _ in scrollToSelection(using: proxy) }
+                    .onChange(of: controller.state.selectedIndex) { _ in
+                        guard let selectedResult = controller.state.selectedResult else { return }
+                        proxy.scrollTo(selectedResult.id, anchor: .center)
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(red: 0.10, green: 0.11, blue: 0.12))
-    }
-
-    private func scrollToSelection(using proxy: ScrollViewProxy) {
-        guard let selectedResult = state.selectedResult else { return }
-        proxy.scrollTo(selectedResult.id, anchor: .center)
+        .onAppear { isQueryFocused = true }
     }
 }
 

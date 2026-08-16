@@ -26,6 +26,10 @@ final class ApplicationCatalogTests: XCTestCase {
         XCTAssertTrue(applications.contains { $0.url.path == "/System/Applications/Utilities/Disk Utility.app" })
     }
 
+    func testStandardRootsExcludeSystemLibrary() {
+        XCTAssertFalse(ApplicationCatalog.standardRoots.contains { $0.path.hasPrefix("/System/Library") })
+    }
+
     private func makeTemporaryDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appending(path: UUID().uuidString, directoryHint: .isDirectory)

@@ -1,0 +1,31 @@
+import Foundation
+
+/// Serves a stable application snapshot to the Launcher while catalog refreshes happen off the main thread.
+final class ApplicationCatalogCache: ApplicationCataloging, @unchecked Sendable {
+    private let catalog: any ApplicationCataloging
+    private let lock = NSLock()
+    private var applications: [ApplicationCandidate] = []
+
+    init(catalog: any ApplicationCataloging = ApplicationCatalog()) {
+        self.catalog = catalog
+    }
+
+    func scan() throws -> [ApplicationCandidate] {
+        lock.withLock { applications }
+    }
+
+    func refresh() throws {
+        let scannedApplications = try catalog.scan()
+        lock.withLock { applications = scannedApplications }
+    }
+
+    func refreshInBackground() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                try self?.refresh()
+            } catch {
+                NSLog("Cockpit could not refresh its application catalog: %@", error.localizedDescription)
+            }
+        }
+    }
+}

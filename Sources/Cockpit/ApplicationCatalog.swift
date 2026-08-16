@@ -53,7 +53,6 @@ struct ApplicationCatalog: ApplicationCataloging {
     static let standardRoots = [
         URL(fileURLWithPath: "/Applications", isDirectory: true),
         URL(fileURLWithPath: "/System/Applications", isDirectory: true),
-        URL(fileURLWithPath: "/System/Library/CoreServices", isDirectory: true),
         FileManager.default.homeDirectoryForCurrentUser.appending(path: "Applications", directoryHint: .isDirectory),
     ]
 }
