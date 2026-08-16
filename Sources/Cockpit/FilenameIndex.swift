@@ -5,6 +5,13 @@ private let sqliteTransient = unsafeBitCast(-1, to: sqlite3_destructor_type.self
 
 struct FilenameCandidate: Equatable, Sendable, Identifiable {
     let url: URL
+    let normalizedName: String
+
+    init(url: URL) {
+        self.url = url
+        let name = url.lastPathComponent
+        normalizedName = SearchNormalizer.normalize(name)
+    }
 
     var id: URL { url }
     var name: String { url.lastPathComponent }
@@ -26,6 +33,7 @@ protocol FilenameIndexing: AnyObject {
 
 extension FilenameCandidate: LauncherSearchable {
     var searchLabel: String { name }
+    var normalizedSearchLabel: String { normalizedName }
 }
 
 final class FilenameIndex: FilenameIndexing, @unchecked Sendable {
@@ -105,8 +113,9 @@ final class FilenameIndex: FilenameIndexing, @unchecked Sendable {
     }
 
     func matches(for query: String) throws -> [FilenameCandidate] {
-        snapshotLock.withLock {
-            filenames.filter { $0.name.localizedCaseInsensitiveContains(query) }
+        let normalizedQuery = SearchNormalizer.normalize(query)
+        return snapshotLock.withLock {
+            filenames.filter { $0.normalizedName.contains(normalizedQuery) }
         }
     }
 

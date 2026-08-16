@@ -4,9 +4,10 @@ import SwiftUI
 
 @main
 @MainActor
-final class CockpitApp: NSObject, NSApplicationDelegate {
+final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let workspaceLauncher = WorkspaceApplicationLauncher()
     private let systemActionExecutor = MacOSSystemActionExecutor()
+    private let loginItemSettings = LoginItemSettings()
     private let applicationCatalog = ApplicationCatalogCache()
     private lazy var filenameIndex = try! FilenameIndex(databaseURL: Self.filenameIndexURL)
     private lazy var launcherController = LauncherController(
@@ -21,6 +22,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
     private var panelController: LauncherPanelController!
     private var hotkey: GlobalHotkey?
     private var statusItem: NSStatusItem?
+    private var launchAtLoginMenuItem: NSMenuItem?
     private var indexedFoldersWindowController: IndexedFoldersWindowController?
 
     private static var filenameIndexURL: URL {
@@ -64,8 +66,12 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: "Show Cockpit", action: #selector(showCockpitFromMenu), keyEquivalent: "")
         menu.addItem(withTitle: "Indexed Folders…", action: #selector(showIndexedFolders), keyEquivalent: "")
         menu.addItem(.separator())
+        let launchAtLoginMenuItem = menu.addItem(withTitle: loginItemSettings.status.menuTitle, action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        self.launchAtLoginMenuItem = launchAtLoginMenuItem
+        menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Cockpit", action: #selector(quitCockpit), keyEquivalent: "q")
         menu.items.forEach { $0.target = self }
+        menu.delegate = self
         statusItem.menu = menu
         self.statusItem = statusItem
     }
@@ -79,6 +85,20 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
             indexedFoldersWindowController = IndexedFoldersWindowController(index: filenameIndex)
         }
         indexedFoldersWindowController?.show()
+    }
+
+    func menuWillOpen(_ menu: NSMenu) {
+        loginItemSettings.refresh()
+        launchAtLoginMenuItem?.title = loginItemSettings.status.menuTitle
+    }
+
+    @objc private func toggleLaunchAtLogin() {
+        do {
+            try loginItemSettings.setEnabled(loginItemSettings.status == .disabled)
+            launchAtLoginMenuItem?.title = loginItemSettings.status.menuTitle
+        } catch {
+            NSAlert(error: error).runModal()
+        }
     }
 
     @objc private func quitCockpit() {

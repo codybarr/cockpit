@@ -4,6 +4,7 @@ struct ApplicationCandidate: Equatable, Sendable, Identifiable {
     let name: String
     let url: URL
     let iconCacheKey: String
+    let normalizedName: String
 
     var id: URL { url }
 
@@ -11,6 +12,7 @@ struct ApplicationCandidate: Equatable, Sendable, Identifiable {
         self.name = name
         self.url = url
         self.iconCacheKey = iconCacheKey ?? url.path
+        normalizedName = SearchNormalizer.normalize(name)
     }
 }
 
