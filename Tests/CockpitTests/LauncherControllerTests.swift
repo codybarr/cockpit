@@ -29,6 +29,33 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertEqual(controller.state.selectedResult, .application(clock))
     }
 
+    func testApostropheQuerySearchesIndexedFilenamesAndOpensOrRevealsTheSelectedFile() {
+        let file = FilenameCandidate(url: URL(fileURLWithPath: "/Users/cody/Projects/Meeting Notes.md"))
+        let opener = RecordingFileOpener()
+        let revealer = RecordingFileRevealer()
+        let controller = makeController(
+            catalog: StubCatalog(applications: [application("Meeting Notes")]),
+            filenameIndex: StubFilenameIndex(files: [file]),
+            fileOpener: opener,
+            fileRevealer: revealer
+        )
+        controller.invoke()
+
+        controller.updateQuery("meeting")
+        XCTAssertEqual(controller.state.results, [.application(application("Meeting Notes"))])
+
+        controller.updateQuery("'meeting")
+        XCTAssertEqual(controller.state.results, [.file(file)])
+
+        controller.executeSelectedResult()
+        XCTAssertEqual(opener.openedFiles, [file])
+
+        controller.invoke()
+        controller.updateQuery("'meeting")
+        controller.revealSelectedResult()
+        XCTAssertEqual(revealer.revealedFiles, [file])
+    }
+
     func testArrowSelectionStaysWithinResults() {
         let clock = application("Clock Utility")
         let notes = application("Notes Utility")
@@ -143,15 +170,44 @@ final class LauncherControllerTests: XCTestCase {
         catalog: StubCatalog,
         launcher: RecordingApplicationLauncher = RecordingApplicationLauncher(),
         revealer: RecordingApplicationRevealer = RecordingApplicationRevealer(),
-        systemActionExecutor: RecordingSystemActionExecutor = RecordingSystemActionExecutor()
+        systemActionExecutor: RecordingSystemActionExecutor = RecordingSystemActionExecutor(),
+        filenameIndex: StubFilenameIndex = StubFilenameIndex(files: []),
+        fileOpener: RecordingFileOpener = RecordingFileOpener(),
+        fileRevealer: RecordingFileRevealer = RecordingFileRevealer()
     ) -> LauncherController {
         LauncherController(
             catalog: catalog,
             launcher: launcher,
             revealer: revealer,
-            systemActionExecutor: systemActionExecutor
+            systemActionExecutor: systemActionExecutor,
+            filenameIndex: filenameIndex,
+            fileOpener: fileOpener,
+            fileRevealer: fileRevealer
         )
     }
+}
+
+private final class StubFilenameIndex: FilenameIndexing {
+    let files: [FilenameCandidate]
+
+    init(files: [FilenameCandidate]) { self.files = files }
+
+    var indexedFolders: [URL] { [] }
+    func addIndexedFolder(_ folder: URL) throws {}
+    func removeIndexedFolder(_ folder: URL) throws {}
+    func matches(for query: String) throws -> [FilenameCandidate] { files }
+}
+
+@MainActor
+private final class RecordingFileOpener: FileOpening {
+    private(set) var openedFiles: [FilenameCandidate] = []
+    func open(_ file: FilenameCandidate) throws { openedFiles.append(file) }
+}
+
+@MainActor
+private final class RecordingFileRevealer: FileRevealing {
+    private(set) var revealedFiles: [FilenameCandidate] = []
+    func reveal(_ file: FilenameCandidate) throws { revealedFiles.append(file) }
 }
 
 private final class StubCatalog: ApplicationCataloging, @unchecked Sendable {

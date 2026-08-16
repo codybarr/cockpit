@@ -16,6 +16,16 @@ protocol ApplicationRevealing: AnyObject {
 }
 
 @MainActor
+protocol FileOpening: AnyObject {
+    func open(_ file: FilenameCandidate) throws
+}
+
+@MainActor
+protocol FileRevealing: AnyObject {
+    func reveal(_ file: FilenameCandidate) throws
+}
+
+@MainActor
 protocol ApplicationUseTracking: AnyObject {
     func score(for application: ApplicationCandidate) -> Int
     func recordLaunch(of application: ApplicationCandidate)
@@ -54,6 +64,9 @@ final class LauncherController: ObservableObject {
     private let launcher: any ApplicationLaunching
     private let revealer: any ApplicationRevealing
     private let systemActionExecutor: any SystemActionExecuting
+    private let filenameIndex: any FilenameIndexing
+    private let fileOpener: any FileOpening
+    private let fileRevealer: any FileRevealing
     private let useTracker: any ApplicationUseTracking
     private let search: ApplicationSearch
     @Published private(set) var state = LauncherState()
@@ -63,6 +76,9 @@ final class LauncherController: ObservableObject {
         launcher: any ApplicationLaunching,
         revealer: any ApplicationRevealing,
         systemActionExecutor: any SystemActionExecuting,
+        filenameIndex: any FilenameIndexing,
+        fileOpener: any FileOpening,
+        fileRevealer: any FileRevealing,
         useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker(),
         search: ApplicationSearch = ApplicationSearch()
     ) {
@@ -70,6 +86,9 @@ final class LauncherController: ObservableObject {
         self.launcher = launcher
         self.revealer = revealer
         self.systemActionExecutor = systemActionExecutor
+        self.filenameIndex = filenameIndex
+        self.fileOpener = fileOpener
+        self.fileRevealer = fileRevealer
         self.useTracker = useTracker
         self.search = search
     }
@@ -89,17 +108,22 @@ final class LauncherController: ObservableObject {
         }
 
         do {
-            let applications = try catalog.scan().map(LauncherResult.application)
-            let systemActions = SystemAction.allCases.map(LauncherResult.systemAction)
-            state.results = search.ranked(applications + systemActions, for: query) { result in
-                guard case let .application(application) = result else { return 0 }
-                return self.useTracker.score(for: application)
+            if query.hasPrefix("'") {
+                let filenameQuery = String(query.dropFirst()).trimmingCharacters(in: .whitespacesAndNewlines)
+                state.results = search.ranked(try filenameIndex.matches(for: filenameQuery).map(LauncherResult.file), for: filenameQuery)
+            } else {
+                let applications = try catalog.scan().map(LauncherResult.application)
+                let systemActions = SystemAction.allCases.map(LauncherResult.systemAction)
+                state.results = search.ranked(applications + systemActions, for: query) { result in
+                    guard case let .application(application) = result else { return 0 }
+                    return self.useTracker.score(for: application)
+                }
             }
             state.selectedIndex = state.results.isEmpty ? nil : 0
         } catch {
             state.results = []
             state.selectedIndex = nil
-            state.errorMessage = "Cockpit could not load applications: \(error.localizedDescription)"
+            state.errorMessage = "Cockpit could not search indexed filenames: \(error.localizedDescription)"
         }
     }
 
@@ -129,6 +153,8 @@ final class LauncherController: ObservableObject {
             case let .application(application):
                 try launcher.launch(application)
                 useTracker.recordLaunch(of: application)
+            case let .file(file):
+                try fileOpener.open(file)
             case let .systemAction(action):
                 try systemActionExecutor.execute(action)
             }
@@ -141,13 +167,15 @@ final class LauncherController: ObservableObject {
     func revealSelectedResult() {
         guard let selectedResult = state.selectedResult else { return }
 
-        guard case let .application(application) = selectedResult else { return }
-
         do {
-            try revealer.reveal(application)
+            switch selectedResult {
+            case let .application(application): try revealer.reveal(application)
+            case let .file(file): try fileRevealer.reveal(file)
+            case .systemAction: return
+            }
             dismiss()
         } catch {
-            state.errorMessage = "Cockpit could not reveal \(application.name): \(error.localizedDescription)"
+            state.errorMessage = "Cockpit could not reveal \(selectedResult.label): \(error.localizedDescription)"
         }
     }
 }

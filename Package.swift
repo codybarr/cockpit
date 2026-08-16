@@ -10,7 +10,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Cockpit",
-            linkerSettings: [.linkedFramework("AppKit"), .linkedFramework("Carbon")]
+            linkerSettings: [.linkedFramework("AppKit"), .linkedFramework("Carbon"), .linkedLibrary("sqlite3")]
         ),
         .testTarget(name: "CockpitTests", dependencies: ["Cockpit"]),
     ]

@@ -8,15 +8,25 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
     private let workspaceLauncher = WorkspaceApplicationLauncher()
     private let systemActionExecutor = MacOSSystemActionExecutor()
     private let applicationCatalog = ApplicationCatalogCache()
+    private lazy var filenameIndex = try! FilenameIndex(databaseURL: Self.filenameIndexURL)
     private lazy var launcherController = LauncherController(
         catalog: applicationCatalog,
         launcher: workspaceLauncher,
         revealer: workspaceLauncher,
-        systemActionExecutor: systemActionExecutor
+        systemActionExecutor: systemActionExecutor,
+        filenameIndex: filenameIndex,
+        fileOpener: workspaceLauncher,
+        fileRevealer: workspaceLauncher
     )
     private var panelController: LauncherPanelController!
     private var hotkey: GlobalHotkey?
     private var statusItem: NSStatusItem?
+    private var indexedFoldersWindowController: IndexedFoldersWindowController?
+
+    private static var filenameIndexURL: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appending(path: "Cockpit/filename-index.sqlite")
+    }
 
     static func main() {
         let application = NSApplication.shared
@@ -52,6 +62,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu()
         menu.addItem(withTitle: "Show Cockpit", action: #selector(showCockpitFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: "Indexed Folders…", action: #selector(showIndexedFolders), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Cockpit", action: #selector(quitCockpit), keyEquivalent: "q")
         menu.items.forEach { $0.target = self }
@@ -63,13 +74,20 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         showLauncher()
     }
 
+    @objc private func showIndexedFolders() {
+        if indexedFoldersWindowController == nil {
+            indexedFoldersWindowController = IndexedFoldersWindowController(index: filenameIndex)
+        }
+        indexedFoldersWindowController?.show()
+    }
+
     @objc private func quitCockpit() {
         NSApp.terminate(nil)
     }
 }
 
 @MainActor
-final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevealing {
+final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevealing, FileOpening, FileRevealing {
     func launch(_ application: ApplicationCandidate) throws {
         guard NSWorkspace.shared.open(application.url) else {
             throw ApplicationError.unavailable
@@ -77,10 +95,20 @@ final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevea
     }
 
     func reveal(_ application: ApplicationCandidate) throws {
-        guard FileManager.default.fileExists(atPath: application.url.path) else {
-            throw ApplicationError.unavailable
-        }
-        NSWorkspace.shared.activateFileViewerSelecting([application.url])
+        try revealURL(application.url)
+    }
+
+    func open(_ file: FilenameCandidate) throws {
+        guard NSWorkspace.shared.open(file.url) else { throw ApplicationError.unavailable }
+    }
+
+    func reveal(_ file: FilenameCandidate) throws {
+        try revealURL(file.url)
+    }
+
+    private func revealURL(_ url: URL) throws {
+        guard FileManager.default.fileExists(atPath: url.path) else { throw ApplicationError.unavailable }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
     private enum ApplicationError: LocalizedError {
@@ -288,6 +316,9 @@ private struct LauncherResultRow: View {
         case let .application(application):
             Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
                 .resizable()
+        case let .file(file):
+            Image(nsImage: NSWorkspace.shared.icon(forFile: file.url.path))
+                .resizable()
         case let .systemAction(action):
             Image(systemName: action.symbolName)
                 .font(.system(size: 26))
@@ -298,6 +329,8 @@ private struct LauncherResultRow: View {
         switch result {
         case let .application(application):
             isRevealHintVisible ? "Reveal file in Finder" : application.url.path
+        case let .file(file):
+            isRevealHintVisible ? "Reveal file in Finder" : file.url.path
         case .systemAction:
             "System action"
         }
