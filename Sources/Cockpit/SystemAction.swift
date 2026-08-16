@@ -38,7 +38,33 @@ protocol SystemActionExecuting: AnyObject {
 }
 
 @MainActor
+protocol SystemProcessRunning: AnyObject {
+    func start(executableURL: URL, arguments: [String]) throws
+}
+
+@MainActor
+final class FoundationSystemProcessRunner: SystemProcessRunning {
+    private var runningProcesses: [Process] = []
+
+    func start(executableURL: URL, arguments: [String]) throws {
+        runningProcesses.removeAll { !$0.isRunning }
+
+        let process = Process()
+        process.executableURL = executableURL
+        process.arguments = arguments
+        try process.run()
+        runningProcesses.append(process)
+    }
+}
+
+@MainActor
 final class MacOSSystemActionExecutor: SystemActionExecuting {
+    private let processRunner: any SystemProcessRunning
+
+    init(processRunner: any SystemProcessRunning = FoundationSystemProcessRunner()) {
+        self.processRunner = processRunner
+    }
+
     func execute(_ action: SystemAction) throws {
         if action == .lock {
             try lockScreen()
@@ -60,14 +86,10 @@ final class MacOSSystemActionExecutor: SystemActionExecuting {
     }
 
     private func lockScreen() throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/System/Library/CoreServices/Menu Extras/User.menu/Contents/Resources/CGSession")
-        process.arguments = ["-suspend"]
-        try process.run()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else {
-            throw SystemActionError.failed("macOS could not lock the screen.")
-        }
+        try processRunner.start(
+            executableURL: URL(fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine"),
+            arguments: ["-background"]
+        )
     }
 
     private enum SystemActionError: LocalizedError {
