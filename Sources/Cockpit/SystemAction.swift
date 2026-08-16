@@ -1,4 +1,4 @@
-import AppKit
+import ApplicationServices
 import Foundation
 
 enum SystemAction: String, CaseIterable, Equatable, Sendable, Identifiable {
@@ -39,23 +39,48 @@ protocol SystemActionExecuting: AnyObject {
 }
 
 @MainActor
-protocol ScreenSaverLaunching: AnyObject {
-    func launchScreenSaver() -> Bool
+protocol ScreenLocking: AnyObject {
+    func lockScreen() throws
 }
 
 @MainActor
-final class WorkspaceScreenSaverLauncher: ScreenSaverLaunching {
-    func launchScreenSaver() -> Bool {
-        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app"))
+final class AccessibilityScreenLocker: ScreenLocking {
+    func lockScreen() throws {
+        guard AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary) else {
+            throw ScreenLockError.accessibilityPermissionDenied
+        }
+
+        let source = CGEventSource(stateID: .hidSystemState)
+        for isKeyDown in [true, false] {
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 12, keyDown: isKeyDown) else {
+                throw ScreenLockError.unavailable
+            }
+            event.flags = [.maskCommand, .maskControl]
+            event.post(tap: .cghidEventTap)
+        }
+    }
+
+    private enum ScreenLockError: LocalizedError {
+        case accessibilityPermissionDenied
+        case unavailable
+
+        var errorDescription: String? {
+            switch self {
+            case .accessibilityPermissionDenied:
+                "Cockpit needs Accessibility permission to lock the screen. Grant it in System Settings, then run Lock again."
+            case .unavailable:
+                "macOS could not prepare the lock shortcut."
+            }
+        }
     }
 }
 
 @MainActor
 final class MacOSSystemActionExecutor: SystemActionExecuting {
-    private let screenSaverLauncher: any ScreenSaverLaunching
+    private let screenLocker: any ScreenLocking
 
-    init(screenSaverLauncher: any ScreenSaverLaunching = WorkspaceScreenSaverLauncher()) {
-        self.screenSaverLauncher = screenSaverLauncher
+    init(screenLocker: any ScreenLocking = AccessibilityScreenLocker()) {
+        self.screenLocker = screenLocker
     }
 
     func execute(_ action: SystemAction) throws {
@@ -79,9 +104,7 @@ final class MacOSSystemActionExecutor: SystemActionExecuting {
     }
 
     private func lockScreen() throws {
-        guard screenSaverLauncher.launchScreenSaver() else {
-            throw SystemActionError.failed("macOS could not start the screen saver.")
-        }
+        try screenLocker.lockScreen()
     }
 
     private enum SystemActionError: LocalizedError {

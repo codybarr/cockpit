@@ -4,22 +4,21 @@ import XCTest
 
 @MainActor
 final class SystemActionTests: XCTestCase {
-    func testLockStartsTheScreenSaverThroughLaunchServices() throws {
-        let launcher = RecordingScreenSaverLauncher()
-        let executor = MacOSSystemActionExecutor(screenSaverLauncher: launcher)
+    func testLockDelegatesToTheAccessibilityScreenLocker() throws {
+        let locker = RecordingScreenLocker()
+        let executor = MacOSSystemActionExecutor(screenLocker: locker)
 
         try executor.execute(.lock)
 
-        XCTAssertEqual(launcher.launchCount, 1)
+        XCTAssertEqual(locker.lockCount, 1)
     }
 }
 
 @MainActor
-private final class RecordingScreenSaverLauncher: ScreenSaverLaunching {
-    private(set) var launchCount = 0
+private final class RecordingScreenLocker: ScreenLocking {
+    private(set) var lockCount = 0
 
-    func launchScreenSaver() -> Bool {
-        launchCount += 1
-        return true
+    func lockScreen() throws {
+        lockCount += 1
     }
 }
