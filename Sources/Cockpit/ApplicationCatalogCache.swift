@@ -4,11 +4,23 @@ import Foundation
 final class ApplicationCatalogCache: ApplicationCataloging, @unchecked Sendable {
     private let catalog: any ApplicationCataloging
     private let lock = NSLock()
+    private let events: any FileSystemEventSource
     private var applications: [ApplicationCandidate] = []
 
-    init(catalog: any ApplicationCataloging = ApplicationCatalog()) {
+    init(catalog: any ApplicationCataloging = ApplicationCatalog(), roots: [URL] = ApplicationCatalog.standardRoots, events: any FileSystemEventSource = MacOSFileSystemEvents()) {
         self.catalog = catalog
+        self.events = events
+        events.startWatching(paths: roots) { [weak self] changes in
+            guard !changes.isEmpty else { return }
+            do {
+                try self?.refresh()
+            } catch {
+                NSLog("Cockpit could not refresh its application catalog: %@", error.localizedDescription)
+            }
+        }
     }
+
+    deinit { events.stopWatching() }
 
     func scan() throws -> [ApplicationCandidate] {
         lock.withLock { applications }

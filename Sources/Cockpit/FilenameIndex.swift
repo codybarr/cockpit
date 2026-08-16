@@ -1,4 +1,3 @@
-import CoreServices
 import Foundation
 import SQLite3
 
@@ -11,10 +10,17 @@ struct FilenameCandidate: Equatable, Sendable, Identifiable {
     var name: String { url.lastPathComponent }
 }
 
+enum IndexedFolderState: Equatable {
+    case available
+    case unavailable
+}
+
 protocol FilenameIndexing: AnyObject {
     var indexedFolders: [URL] { get }
+    func folderState(for folder: URL) -> IndexedFolderState
     func addIndexedFolder(_ folder: URL) throws
     func removeIndexedFolder(_ folder: URL) throws
+    func retry(folder: URL) throws
     func matches(for query: String) throws -> [FilenameCandidate]
 }
 
@@ -22,17 +28,22 @@ extension FilenameCandidate: LauncherSearchable {
     var searchLabel: String { name }
 }
 
-final class FilenameIndex: FilenameIndexing {
+final class FilenameIndex: FilenameIndexing, @unchecked Sendable {
     private var database: OpaquePointer?
-    private var eventStreams: [String: FSEventStreamRef] = [:]
     private let fileManager: FileManager
+    private let events: any FileSystemEventSource
+    private let snapshotLock = NSLock()
+    private let databaseLock = NSLock()
+    private var filenames: [FilenameCandidate] = []
+    private var unavailableFolders: Set<String> = []
 
     var indexedFolders: [URL] {
         (try? queryStrings("SELECT path FROM indexed_folders ORDER BY path")).map { $0.map(URL.init(fileURLWithPath:)) } ?? []
     }
 
-    init(databaseURL: URL, fileManager: FileManager = .default) throws {
+    init(databaseURL: URL, fileManager: FileManager = .default, events: any FileSystemEventSource = MacOSFileSystemEvents()) throws {
         self.fileManager = fileManager
+        self.events = events
         try fileManager.createDirectory(at: databaseURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         guard sqlite3_open_v2(databaseURL.path, &database, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK else {
             throw IndexError.couldNotOpenDatabase
@@ -46,12 +57,25 @@ final class FilenameIndex: FilenameIndexing {
             )
             """)
         try execute("CREATE INDEX IF NOT EXISTS filenames_filename ON filenames(filename)")
-        for folder in indexedFolders { startWatching(folder) }
+        try rebuildSnapshot()
+        startWatching()
     }
 
     deinit {
-        eventStreams.values.forEach(stopWatching)
+        events.stopWatching()
         sqlite3_close(database)
+    }
+
+    func folderState(for folder: URL) -> IndexedFolderState {
+        let folder = canonicalFolderURL(folder)
+        return snapshotLock.withLock { unavailableFolders.contains(folder.path) || !fileManager.fileExists(atPath: folder.path) ? .unavailable : .available }
+    }
+
+    func retry(folder: URL) throws {
+        let folder = canonicalFolderURL(folder)
+        guard fileManager.fileExists(atPath: folder.path) else { throw IndexError.folderUnavailable(folder) }
+        try reconcile(folder)
+        _ = snapshotLock.withLock { unavailableFolders.remove(folder.path) }
     }
 
     func addIndexedFolder(_ folder: URL) throws {
@@ -63,23 +87,26 @@ final class FilenameIndex: FilenameIndexing {
             try execute("DELETE FROM filenames WHERE folder_path = ?", bindings: [folder.path])
             try indexContents(of: folder)
         }
-        startWatching(folder)
+        try rebuildSnapshot()
+        _ = snapshotLock.withLock { unavailableFolders.remove(folder.path) }
+        startWatching()
     }
 
     func removeIndexedFolder(_ folder: URL) throws {
         let folder = canonicalFolderURL(folder)
-        stopWatching(folder)
-        try execute("DELETE FROM filenames WHERE folder_path = ?", bindings: [folder.path])
-        try execute("DELETE FROM indexed_folders WHERE path = ?", bindings: [folder.path])
+        try transaction {
+            try execute("DELETE FROM filenames WHERE folder_path = ?", bindings: [folder.path])
+            try execute("DELETE FROM indexed_folders WHERE path = ?", bindings: [folder.path])
+        }
+        try rebuildSnapshot()
+        _ = snapshotLock.withLock { unavailableFolders.remove(folder.path) }
+        startWatching()
     }
 
     func matches(for query: String) throws -> [FilenameCandidate] {
-        let pattern = "%\(query.replacing("\\", with: "\\\\").replacing("%", with: "\\%").replacing("_", with: "\\_"))%"
-        return try queryStrings(
-            "SELECT path FROM filenames WHERE filename LIKE ? ESCAPE '\\' ORDER BY path",
-            bindings: [pattern]
-        ).map(URL.init(fileURLWithPath:))
-            .map(FilenameCandidate.init(url:))
+        snapshotLock.withLock {
+            filenames.filter { $0.name.localizedCaseInsensitiveContains(query) }
+        }
     }
 
     private func indexContents(of folder: URL) throws {
@@ -92,15 +119,27 @@ final class FilenameIndex: FilenameIndexing {
     }
 
     fileprivate func refresh(_ folder: URL) {
-        guard fileManager.fileExists(atPath: folder.path) else { return }
         do {
-            try transaction {
-                try execute("DELETE FROM filenames WHERE folder_path = ?", bindings: [folder.path])
-                try indexContents(of: folder)
-            }
+            try reconcile(folder)
+            _ = snapshotLock.withLock { unavailableFolders.remove(folder.path) }
         } catch {
+            _ = snapshotLock.withLock { unavailableFolders.insert(folder.path) }
             NSLog("Cockpit could not refresh filename index for %@: %@", folder.path, error.localizedDescription)
         }
+    }
+
+    private func reconcile(_ folder: URL) throws {
+        guard fileManager.fileExists(atPath: folder.path) else { throw IndexError.folderUnavailable(folder) }
+        try transaction {
+            try execute("DELETE FROM filenames WHERE folder_path = ?", bindings: [folder.path])
+            try indexContents(of: folder)
+        }
+        try rebuildSnapshot()
+    }
+
+    private func rebuildSnapshot() throws {
+        let candidates = try queryStrings("SELECT path FROM filenames ORDER BY path").map(URL.init(fileURLWithPath:)).map(FilenameCandidate.init(url:))
+        snapshotLock.withLock { filenames = candidates }
     }
 
     private func enumerate(_ folder: URL, visit: (URL) throws -> Void) throws {
@@ -125,53 +164,36 @@ final class FilenameIndex: FilenameIndexing {
         folder.standardizedFileURL
     }
 
-    private func startWatching(_ folder: URL) {
-        guard eventStreams[folder.path] == nil else { return }
-        var context = FSEventStreamContext(
-            version: 0,
-            info: Unmanaged.passUnretained(self).toOpaque(),
-            retain: nil,
-            release: nil,
-            copyDescription: nil
-        )
-        guard let stream = FSEventStreamCreate(
-            nil,
-            filenameIndexEvents,
-            &context,
-            [folder.path] as CFArray,
-            FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
-            1,
-            FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagWatchRoot | kFSEventStreamCreateFlagUseCFTypes)
-        ) else { return }
-        FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
-        guard FSEventStreamStart(stream) else {
-            FSEventStreamInvalidate(stream)
-            FSEventStreamRelease(stream)
-            return
+    private func startWatching() {
+        events.startWatching(paths: indexedFolders) { [weak self] changes in
+            self?.handle(changes)
         }
-        eventStreams[folder.path] = stream
     }
 
-    private func stopWatching(_ folder: URL) {
-        guard let stream = eventStreams.removeValue(forKey: folder.path) else { return }
-        stopWatching(stream)
-    }
-
-    private func stopWatching(_ stream: FSEventStreamRef) {
-        FSEventStreamStop(stream)
-        FSEventStreamInvalidate(stream)
-        FSEventStreamSetDispatchQueue(stream, nil)
-        FSEventStreamRelease(stream)
+    private func handle(_ changes: [FileSystemEvent]) {
+        let folders = indexedFolders
+        let requiresReconciliation = changes.contains(.historyDropped)
+        let affectedFolders = requiresReconciliation ? Set(folders) : Set(changes.compactMap { change -> URL? in
+            let path: String
+            switch change {
+            case let .changed(url), let .rootUnavailable(url): path = url.path
+            case .historyDropped: return nil
+            }
+            return folders.first { path == $0.path || path.hasPrefix($0.path + "/") }
+        })
+        for folder in affectedFolders { refresh(folder) }
     }
 
     private func transaction(_ body: () throws -> Void) throws {
-        try execute("BEGIN IMMEDIATE")
-        do {
-            try body()
-            try execute("COMMIT")
-        } catch {
-            try? execute("ROLLBACK")
-            throw error
+        try databaseLock.withLock {
+            try execute("BEGIN IMMEDIATE")
+            do {
+                try body()
+                try execute("COMMIT")
+            } catch {
+                try? execute("ROLLBACK")
+                throw error
+            }
         }
     }
 
@@ -184,17 +206,19 @@ final class FilenameIndex: FilenameIndexing {
     }
 
     private func queryStrings(_ statement: String, bindings: [String] = []) throws -> [String] {
-        var prepared: OpaquePointer?
-        guard sqlite3_prepare_v2(database, statement, -1, &prepared, nil) == SQLITE_OK else { throw databaseError }
-        defer { sqlite3_finalize(prepared) }
-        try bind(bindings, to: prepared)
+        try databaseLock.withLock {
+            var prepared: OpaquePointer?
+            guard sqlite3_prepare_v2(database, statement, -1, &prepared, nil) == SQLITE_OK else { throw databaseError }
+            defer { sqlite3_finalize(prepared) }
+            try bind(bindings, to: prepared)
 
-        var values: [String] = []
-        while sqlite3_step(prepared) == SQLITE_ROW {
-            if let value = sqlite3_column_text(prepared, 0) { values.append(String(cString: value)) }
+            var values: [String] = []
+            while sqlite3_step(prepared) == SQLITE_ROW {
+                if let value = sqlite3_column_text(prepared, 0) { values.append(String(cString: value)) }
+            }
+            guard sqlite3_errcode(database) == SQLITE_OK || sqlite3_errcode(database) == SQLITE_DONE else { throw databaseError }
+            return values
         }
-        guard sqlite3_errcode(database) == SQLITE_OK || sqlite3_errcode(database) == SQLITE_DONE else { throw databaseError }
-        return values
     }
 
     private func bind(_ bindings: [String], to statement: OpaquePointer?) throws {
@@ -220,23 +244,4 @@ final class FilenameIndex: FilenameIndexing {
             }
         }
     }
-}
-
-private func filenameIndexEvents(
-    _ stream: ConstFSEventStreamRef,
-    _ info: UnsafeMutableRawPointer?,
-    _ eventCount: Int,
-    _ eventPaths: UnsafeMutableRawPointer,
-    _ eventFlags: UnsafePointer<FSEventStreamEventFlags>,
-    _ eventIds: UnsafePointer<FSEventStreamEventId>
-) {
-    guard let info else { return }
-    let index = Unmanaged<FilenameIndex>.fromOpaque(info).takeUnretainedValue()
-    let paths = unsafeBitCast(eventPaths, to: NSArray.self) as! [String]
-    let changedFolders = Set(paths.compactMap { path in
-        index.indexedFolders.first { folder in
-            path == folder.path || path.hasPrefix(folder.path + "/")
-        }
-    })
-    changedFolders.forEach(index.refresh)
 }

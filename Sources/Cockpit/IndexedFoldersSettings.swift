@@ -40,6 +40,17 @@ final class IndexedFoldersSettings: ObservableObject {
         }
     }
 
+    func retry(_ folder: URL) {
+        do {
+            try index.retry(folder: folder)
+            reload()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func state(for folder: URL) -> IndexedFolderState { index.folderState(for: folder) }
+
     private func reload() {
         folders = index.indexedFolders
     }
@@ -89,6 +100,10 @@ private struct IndexedFoldersView: View {
                         Image(systemName: "folder")
                         Text(folder.path).lineLimit(1)
                         Spacer()
+                        if settings.state(for: folder) == .unavailable {
+                            Text("Unavailable").foregroundStyle(.red)
+                            Button("Retry") { settings.retry(folder) }
+                        }
                         Button("Remove") { settings.remove(folder) }
                     }
                 }

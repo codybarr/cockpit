@@ -15,7 +15,9 @@ final class IndexedFoldersWindowControllerTests: XCTestCase {
 
 private final class EmptyFilenameIndex: FilenameIndexing {
     var indexedFolders: [URL] { [] }
+    func folderState(for folder: URL) -> IndexedFolderState { .available }
     func addIndexedFolder(_ folder: URL) throws {}
     func removeIndexedFolder(_ folder: URL) throws {}
+    func retry(folder: URL) throws {}
     func matches(for query: String) throws -> [FilenameCandidate] { [] }
 }

@@ -214,8 +214,10 @@ private final class StubFilenameIndex: FilenameIndexing {
     init(files: [FilenameCandidate]) { self.files = files }
 
     var indexedFolders: [URL] { [] }
+    func folderState(for folder: URL) -> IndexedFolderState { .available }
     func addIndexedFolder(_ folder: URL) throws {}
     func removeIndexedFolder(_ folder: URL) throws {}
+    func retry(folder: URL) throws {}
     func matches(for query: String) throws -> [FilenameCandidate] { files }
 }
 
