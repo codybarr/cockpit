@@ -12,22 +12,8 @@ app="$workdir/Cockpit.app"
 archive="$workdir/Cockpit-$version.zip"
 
 rm -rf "$workdir"
-mkdir -p "$app/Contents/MacOS"
-swift build -c release
-cp .build/release/Cockpit "$app/Contents/MacOS/Cockpit"
-cat > "$app/Contents/Info.plist" <<PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>CFBundleExecutable</key><string>Cockpit</string>
-  <key>CFBundleIdentifier</key><string>com.codybarr.Cockpit</string>
-  <key>CFBundleName</key><string>Cockpit</string>
-  <key>CFBundleShortVersionString</key><string>$version</string>
-  <key>CFBundleVersion</key><string>$version</string>
-  <key>LSMinimumSystemVersion</key><string>13.0</string>
-  <key>LSUIElement</key><true/>
-</dict></plist>
-PLIST
+mkdir -p "$workdir"
+"$root/Scripts/create-app.sh" "$version" "$app"
 
 codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID_APPLICATION" "$app"
 ditto -c -k --keepParent "$app" "$archive"
