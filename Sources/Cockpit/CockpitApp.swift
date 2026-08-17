@@ -27,8 +27,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var hotkey: GlobalHotkey?
     private var statusItem: NSStatusItem?
     private var launchAtLoginMenuItem: NSMenuItem?
-    private var indexedFoldersWindowController: IndexedFoldersWindowController?
-    private var launcherHotkeyWindowController: LauncherHotkeyWindowController?
+    private var settingsWindowController: SettingsWindowController?
 
     private static var filenameIndexURL: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -45,13 +44,20 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         applicationCatalog.refreshInBackground()
-        panelController = LauncherPanelController(controller: launcherController)
+        panelController = LauncherPanelController(controller: launcherController) { [weak self] in
+            self?.showSettings()
+        }
         installStatusItem()
 
         _ = registerLauncherHotkey(launcherHotkeySettings.selectedHotkey)
     }
 
     private func showLauncher() {
+        if panelController.isActive {
+            panelController.hide()
+            return
+        }
+
         launcherController.invoke()
         panelController.present()
     }
@@ -74,8 +80,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let menu = NSMenu()
         menu.addItem(withTitle: "Show Cockpit", action: #selector(showCockpitFromMenu), keyEquivalent: "")
-        menu.addItem(withTitle: "Settings…", action: #selector(showLauncherHotkeySettings), keyEquivalent: "")
-        menu.addItem(withTitle: "Indexed Folders…", action: #selector(showIndexedFolders), keyEquivalent: "")
+        menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: "")
         menu.addItem(.separator())
         let launchAtLoginMenuItem = menu.addItem(withTitle: loginItemSettings.status.menuTitle, action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
         self.launchAtLoginMenuItem = launchAtLoginMenuItem
@@ -91,18 +96,16 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
         showLauncher()
     }
 
-    @objc private func showLauncherHotkeySettings() {
-        if launcherHotkeyWindowController == nil {
-            launcherHotkeyWindowController = LauncherHotkeyWindowController(settings: launcherHotkeySettings)
-        }
-        launcherHotkeyWindowController?.show()
-    }
+    @objc private func showSettings() {
+        panelController.hide()
 
-    @objc private func showIndexedFolders() {
-        if indexedFoldersWindowController == nil {
-            indexedFoldersWindowController = IndexedFoldersWindowController(index: filenameIndex)
+        if settingsWindowController == nil {
+            settingsWindowController = SettingsWindowController(
+                index: filenameIndex,
+                hotkeySettings: launcherHotkeySettings
+            )
         }
-        indexedFoldersWindowController?.show()
+        settingsWindowController?.show()
     }
 
     func menuWillOpen(_ menu: NSMenu) {
@@ -167,11 +170,13 @@ final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevea
 private final class LauncherPanelController {
     private let controller: LauncherController
     private let panel: LauncherPanel
+    private let showSettings: () -> Void
     private var stateObserver: Any?
     private var pendingResize: DispatchWorkItem?
 
-    init(controller: LauncherController) {
+    init(controller: LauncherController, showSettings: @escaping () -> Void) {
         self.controller = controller
+        self.showSettings = showSettings
         panel = LauncherPanel(
             contentRect: NSRect(x: 0, y: 0, width: 680, height: 76),
             styleMask: [.borderless],
@@ -192,10 +197,16 @@ private final class LauncherPanelController {
         }
     }
 
+    var isActive: Bool { panel.isKeyWindow }
+
     func present() {
         resize(for: controller.state, preservingTopEdge: false)
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
+    }
+
+    fileprivate func showSettingsPanel() {
+        showSettings()
     }
 
     fileprivate func moveSelection(by offset: Int) {
@@ -256,6 +267,21 @@ private final class LauncherPanelController {
     }
 }
 
+struct LauncherKeypress {
+    enum Action: Equatable {
+        case showSettings
+        case passThrough
+    }
+
+    let action: Action
+
+    init(keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) {
+        action = keyCode == UInt16(kVK_ANSI_Comma) && modifierFlags.contains(.command)
+            ? .showSettings
+            : .passThrough
+    }
+}
+
 private final class LauncherPanel: NSPanel {
     weak var controller: LauncherPanelController?
 
@@ -271,6 +297,14 @@ private final class LauncherPanel: NSPanel {
         guard event.type == .keyDown else {
             super.sendEvent(event)
             return
+        }
+
+        switch LauncherKeypress(keyCode: event.keyCode, modifierFlags: event.modifierFlags).action {
+        case .showSettings:
+            controller?.showSettingsPanel()
+            return
+        case .passThrough:
+            break
         }
 
         switch event.keyCode {

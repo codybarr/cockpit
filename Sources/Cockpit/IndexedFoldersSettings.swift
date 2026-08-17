@@ -57,18 +57,21 @@ final class IndexedFoldersSettings: ObservableObject {
 }
 
 @MainActor
-final class IndexedFoldersWindowController: NSWindowController {
-    init(index: any FilenameIndexing) {
+final class SettingsWindowController: NSWindowController {
+    init(index: any FilenameIndexing, hotkeySettings: LauncherHotkeySettings) {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 360),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 480),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
-        window.title = "Indexed Folders"
+        window.title = "Settings"
         window.contentMaxSize = NSSize(width: 900, height: 600)
         window.center()
-        let hostingView = NSHostingView(rootView: IndexedFoldersView(settings: IndexedFoldersSettings(index: index)))
+        let hostingView = NSHostingView(rootView: SettingsView(
+            indexedFoldersSettings: IndexedFoldersSettings(index: index),
+            hotkeySettings: hotkeySettings
+        ))
         hostingView.sizingOptions = []
         window.contentView = hostingView
         super.init(window: window)
@@ -83,11 +86,16 @@ final class IndexedFoldersWindowController: NSWindowController {
     }
 }
 
-private struct IndexedFoldersView: View {
-    @ObservedObject var settings: IndexedFoldersSettings
+private struct SettingsView: View {
+    @ObservedObject var indexedFoldersSettings: IndexedFoldersSettings
+    @ObservedObject var hotkeySettings: LauncherHotkeySettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            LauncherHotkeyPicker(settings: hotkeySettings)
+
+            Divider()
+
             Text("Indexed folders")
                 .font(.title2.weight(.semibold))
             Text("Cockpit does not search all of macOS. It searches filenames only in the folders you select; file contents and Spotlight are never searched.")
@@ -95,22 +103,22 @@ private struct IndexedFoldersView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             List {
-                ForEach(settings.folders, id: \.self) { folder in
+                ForEach(indexedFoldersSettings.folders, id: \.self) { folder in
                     HStack {
                         Image(systemName: "folder")
                         Text(folder.path).lineLimit(1)
                         Spacer()
-                        if settings.state(for: folder) == .unavailable {
+                        if indexedFoldersSettings.state(for: folder) == .unavailable {
                             Text("Unavailable").foregroundStyle(.red)
-                            Button("Retry") { settings.retry(folder) }
+                            Button("Retry") { indexedFoldersSettings.retry(folder) }
                         }
-                        Button("Remove") { settings.remove(folder) }
+                        Button("Remove") { indexedFoldersSettings.remove(folder) }
                     }
                 }
             }
             .listStyle(.plain)
             .overlay {
-                if settings.folders.isEmpty {
+                if indexedFoldersSettings.folders.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "folder.badge.questionmark").font(.title)
                         Text("No indexed folders").font(.headline)
@@ -121,13 +129,13 @@ private struct IndexedFoldersView: View {
                 }
             }
 
-            if let error = settings.errorMessage {
+            if let error = indexedFoldersSettings.errorMessage {
                 Text(error).foregroundStyle(.red).font(.caption)
             }
 
             HStack {
                 Spacer()
-                Button("Add Folder…") { settings.chooseFolder() }
+                Button("Add Folder…") { indexedFoldersSettings.chooseFolder() }
                     .keyboardShortcut(.defaultAction)
             }
         }

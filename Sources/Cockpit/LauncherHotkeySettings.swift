@@ -49,31 +49,7 @@ final class LauncherHotkeySettings: ObservableObject {
     }
 }
 
-@MainActor
-final class LauncherHotkeyWindowController: NSWindowController {
-    init(settings: LauncherHotkeySettings) {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 190),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "Settings"
-        window.center()
-        window.contentView = NSHostingView(rootView: LauncherHotkeySettingsView(settings: settings))
-        super.init(window: window)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { nil }
-
-    func show() {
-        window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-}
-
-private struct LauncherHotkeySettingsView: View {
+struct LauncherHotkeyPicker: View {
     @ObservedObject var settings: LauncherHotkeySettings
 
     var body: some View {
@@ -93,6 +69,5 @@ private struct LauncherHotkeySettingsView: View {
             .labelsHidden()
             .pickerStyle(.radioGroup)
         }
-        .padding(20)
     }
 }

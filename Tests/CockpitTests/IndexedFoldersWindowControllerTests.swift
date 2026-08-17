@@ -3,12 +3,16 @@ import XCTest
 @testable import Cockpit
 
 @MainActor
-final class IndexedFoldersWindowControllerTests: XCTestCase {
-    func testIndexedFoldersWindowCapsItsContentHeightSoTheAddButtonRemainsReachable() {
-        let controller = IndexedFoldersWindowController(index: EmptyFilenameIndex())
+final class SettingsWindowControllerTests: XCTestCase {
+    func testSettingsWindowPresentsHotkeyAndIndexedFolderSettingsOnOnePage() {
+        let controller = SettingsWindowController(
+            index: EmptyFilenameIndex(),
+            hotkeySettings: LauncherHotkeySettings()
+        )
         controller.show()
         RunLoop.main.run(until: Date().addingTimeInterval(0.1))
 
+        XCTAssertEqual(controller.window?.title, "Settings")
         XCTAssertLessThanOrEqual(controller.window!.frame.height, 632)
     }
 }
