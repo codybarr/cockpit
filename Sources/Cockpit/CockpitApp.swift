@@ -8,6 +8,9 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let workspaceLauncher = WorkspaceApplicationLauncher()
     private let systemActionExecutor = MacOSSystemActionExecutor()
     private let loginItemSettings = LoginItemSettings()
+    private lazy var launcherHotkeySettings = LauncherHotkeySettings { [weak self] hotkey in
+        self?.registerLauncherHotkey(hotkey) ?? false
+    }
     private let applicationCatalog = ApplicationCatalogCache()
     private lazy var filenameIndex = try! FilenameIndex(databaseURL: Self.filenameIndexURL)
     private lazy var launcherController = LauncherController(
@@ -25,6 +28,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private var launchAtLoginMenuItem: NSMenuItem?
     private var indexedFoldersWindowController: IndexedFoldersWindowController?
+    private var launcherHotkeyWindowController: LauncherHotkeyWindowController?
 
     private static var filenameIndexURL: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -44,19 +48,24 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
         panelController = LauncherPanelController(controller: launcherController)
         installStatusItem()
 
-        do {
-            let hotkey = try GlobalHotkey(keyCode: UInt32(kVK_Space), modifiers: UInt32(optionKey)) { [weak self] in
-                self?.showLauncher()
-            }
-            self.hotkey = hotkey
-        } catch {
-            NSLog("Cockpit could not register its global hotkey: %@", error.localizedDescription)
-        }
+        _ = registerLauncherHotkey(launcherHotkeySettings.selectedHotkey)
     }
 
     private func showLauncher() {
         launcherController.invoke()
         panelController.present()
+    }
+
+    private func registerLauncherHotkey(_ hotkey: LauncherHotkey) -> Bool {
+        do {
+            self.hotkey = try GlobalHotkey(keyCode: UInt32(kVK_Space), modifiers: hotkey.modifiers) { [weak self] in
+                self?.showLauncher()
+            }
+            return true
+        } catch {
+            NSLog("Cockpit could not register its global hotkey: %@", error.localizedDescription)
+            return false
+        }
     }
 
     private func installStatusItem() {
@@ -65,6 +74,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let menu = NSMenu()
         menu.addItem(withTitle: "Show Cockpit", action: #selector(showCockpitFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: "Settings…", action: #selector(showLauncherHotkeySettings), keyEquivalent: "")
         menu.addItem(withTitle: "Indexed Folders…", action: #selector(showIndexedFolders), keyEquivalent: "")
         menu.addItem(.separator())
         let launchAtLoginMenuItem = menu.addItem(withTitle: loginItemSettings.status.menuTitle, action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
@@ -79,6 +89,13 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func showCockpitFromMenu() {
         showLauncher()
+    }
+
+    @objc private func showLauncherHotkeySettings() {
+        if launcherHotkeyWindowController == nil {
+            launcherHotkeyWindowController = LauncherHotkeyWindowController(settings: launcherHotkeySettings)
+        }
+        launcherHotkeyWindowController?.show()
     }
 
     @objc private func showIndexedFolders() {

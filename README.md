@@ -38,7 +38,7 @@ open "$app"
 
 This produces an unsigned local build. To put it in `/Applications` for every user, replace `$HOME/Applications` with `/Applications` and run the installation commands with the needed administrator privileges.
 
-Press **Option-Space** to show the Launcher. Use Cockpit’s menu-bar icon to show or quit the app. Cockpit searches the standard application locations (`/Applications`, `/System/Applications`, and `~/Applications`) without Spotlight, alongside Lock, Restart, and Shut Down System actions. Select a result and press Return to open the application or run the System action. The menu-bar menu also provides an opt-in Launch at Login control; “Approval Needed” leaves macOS’s setting unchanged.
+Press **Option-Space** to show the Launcher by default. Use Cockpit’s menu-bar icon to choose **Settings…** and select **Ctrl+Space**, **Alt+Space**, or **Cmd+Space**, or to show or quit the app. Cockpit searches the standard application locations (`/Applications`, `/System/Applications`, and `~/Applications`) without Spotlight, alongside Lock, Restart, and Shut Down System actions. Select a result and press Return to open the application or run the System action. The menu-bar menu also provides an opt-in Launch at Login control; “Approval Needed” leaves macOS’s setting unchanged.
 
 ## Performance acceptance benchmarks
 
