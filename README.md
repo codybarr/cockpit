@@ -1,3 +1,5 @@
+![Cockpit screenshot](docs/images/cockpit-screenshot.png)
+
 # Cockpit
 
 Cockpit is a local macOS launcher for opening applications and deliberately indexed filenames without Spotlight.
