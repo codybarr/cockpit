@@ -23,15 +23,14 @@ final class LoginItemSettingsTests: XCTestCase {
         XCTAssertEqual(settings.status, .disabled)
     }
 
-    func testEnablingAnUnavailableLoginItemReportsWhyItCannotRegister() {
+    func testEnablingAnUnavailableLoginItemStillAttemptsRegistration() throws {
         let service = StubLoginItemService(status: .unavailable)
         let settings = LoginItemSettings(service: service)
 
-        XCTAssertThrowsError(try settings.setEnabled(true)) { error in
-            XCTAssertEqual(error.localizedDescription, "Launch at Login is unavailable in this build. Install a signed Cockpit release to enable it.")
-        }
-        XCTAssertEqual(service.enableCount, 0)
-        XCTAssertEqual(settings.status, .unavailable)
+        try settings.setEnabled(true)
+
+        XCTAssertEqual(service.enableCount, 1)
+        XCTAssertEqual(settings.status, .enabled)
     }
 
     func testApprovalNeededStatusDoesNotAttemptToOverrideSystemSettings() throws {
