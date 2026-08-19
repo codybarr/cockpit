@@ -77,7 +77,15 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
 
     private func installStatusItem() {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "airplane", accessibilityDescription: "Cockpit")
+        if let imageURL = Bundle.main.url(forResource: "CockpitMenuBarTemplate", withExtension: "png"),
+           let image = NSImage(contentsOf: imageURL) {
+            image.size = NSSize(width: 18, height: 18)
+            image.isTemplate = true
+            image.accessibilityDescription = "Cockpit"
+            statusItem.button?.image = image
+        } else {
+            NSLog("Cockpit menu-bar icon is missing from the app bundle.")
+        }
 
         let menu = NSMenu()
         menu.addItem(withTitle: "Show Cockpit", action: #selector(showCockpitFromMenu), keyEquivalent: "")

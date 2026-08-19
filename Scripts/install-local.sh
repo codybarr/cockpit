@@ -12,6 +12,7 @@ fi
 
 "$root/Scripts/create-app.sh" local "$app"
 codesign --force --options runtime --sign "$identity" "$app"
+"$root/Scripts/verify-app-icon.sh" "$app"
 open "$app"
 
 echo "Installed locally signed build: $app"

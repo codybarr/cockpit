@@ -6,7 +6,9 @@ version=${1:?Usage: Scripts/create-app.sh VERSION APP_PATH}
 app=${2:?Usage: Scripts/create-app.sh VERSION APP_PATH}
 
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+cp "$root/Assets/Cockpit.icns" "$app/Contents/Resources/Cockpit.icns"
+cp "$root/Assets/CockpitMenuBarTemplate.png" "$app/Contents/Resources/CockpitMenuBarTemplate.png"
 (
   cd "$root"
   swift build -c release
@@ -19,6 +21,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
   <key>CFBundleExecutable</key><string>Cockpit</string>
   <key>CFBundleIdentifier</key><string>com.codybarr.Cockpit</string>
   <key>CFBundleName</key><string>Cockpit</string>
+  <key>CFBundleIconFile</key><string>Cockpit.icns</string>
   <key>CFBundleShortVersionString</key><string>$version</string>
   <key>CFBundleVersion</key><string>$version</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>

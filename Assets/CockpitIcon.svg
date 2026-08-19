@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="field" x1="160" y1="88" x2="854" y2="944" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#26394D"/>
+      <stop offset="0.5" stop-color="#132032"/>
+      <stop offset="1" stop-color="#080F1B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(512 426) rotate(90) scale(434)">
+      <stop stop-color="#4FA7D4" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#4FA7D4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fuselage" x1="512" y1="266" x2="512" y2="767" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6FBFF"/>
+      <stop offset=".5" stop-color="#B9DBEF"/>
+      <stop offset="1" stop-color="#6C9DBA"/>
+    </linearGradient>
+    <linearGradient id="wing" x1="210" y1="516" x2="814" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DDF2FC"/>
+      <stop offset=".48" stop-color="#8EC8E6"/>
+      <stop offset="1" stop-color="#548EAC"/>
+    </linearGradient>
+    <linearGradient id="tail" x1="512" y1="606" x2="512" y2="770" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8FCBE9"/>
+      <stop offset="1" stop-color="#477D9C"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="214" fill="url(#field)"/>
+  <rect x="32" y="32" width="960" height="960" rx="214" fill="url(#glow)"/>
+  <path d="M246 585 444 506 512 286 580 506 778 585 733 644 572 612 554 755Q550 781 512 798 474 781 470 755L452 612 291 644Z" fill="#02070E" opacity=".55"/>
+  <path d="M218 555 446 480 512 267 578 480 806 555 754 620 567 583 549 737Q545 764 512 780 479 764 475 737L457 583 270 620Z" fill="url(#wing)"/>
+  <path d="M512 267 578 480 555 573 512 611 469 573 446 480Z" fill="url(#fuselage)"/>
+  <path d="M457 583 512 611 567 583 549 737Q545 764 512 780 479 764 475 737Z" fill="url(#tail)"/>
+  <path d="M512 301 539 480 512 527 485 480Z" fill="#FFF" opacity=".42"/>
+  <path d="M270 620 457 583 449 620 298 658Z" fill="#477D9C" opacity=".78"/>
+  <path d="M754 620 567 583 575 620 726 658Z" fill="#315F7B" opacity=".9"/>
+  <rect x="33" y="33" width="958" height="958" rx="213" fill="none" stroke="#8ED1F2" stroke-opacity=".16" stroke-width="3"/>
+</svg>
