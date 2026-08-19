@@ -25,7 +25,10 @@ Pass another app-bundle path to install elsewhere, for example:
 sudo Scripts/install-local.sh /Applications/Cockpit.app
 ```
 
-Press **Option-Space** to show the Launcher by default. Use Cockpit’s menu-bar icon to choose **Settings…** and select **Ctrl+Space**, **Alt+Space**, or **Cmd+Space**, or to show or quit the app. Cockpit searches the standard application locations (`/Applications`, `/System/Applications`, and `~/Applications`) without Spotlight, alongside Lock, Restart, and Shut Down System actions. Select a result and press Return to open the application or run the System action. The menu-bar menu also provides an opt-in Launch at Login control; “Approval Needed” leaves macOS’s setting unchanged.
+> Launch at Login requires a signed Cockpit release. macOS does not make the
+> Service Management API available to unsigned local builds.
+
+Press **Option-Space** to show the Launcher by default. Use Cockpit’s menu-bar icon to choose **Settings…**, configure Launch at Login or select **Ctrl+Space**, **Alt+Space**, or **Cmd+Space**, or to show or quit the app. Cockpit searches the standard application locations (`/Applications`, `/System/Applications`, and `~/Applications`) without Spotlight, alongside Lock, Restart, and Shut Down System actions. Select a result and press Return to open the application or run the System action.
 
 ## Performance acceptance benchmarks
 

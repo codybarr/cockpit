@@ -57,8 +57,17 @@ final class LoginItemSettings: ObservableObject {
         switch (status, isEnabled) {
         case (.disabled, true): try service.enable()
         case (.enabled, false): try service.disable()
-        case (.approvalRequired, _), (.unavailable, _), (.disabled, false), (.enabled, true): break
+        case (.unavailable, _): throw LoginItemError.unavailable
+        case (.approvalRequired, _), (.disabled, false), (.enabled, true): break
         }
         status = service.status
+    }
+
+    private enum LoginItemError: LocalizedError {
+        case unavailable
+
+        var errorDescription: String? {
+            "Launch at Login is unavailable in this build. Install a signed Cockpit release to enable it."
+        }
     }
 }
