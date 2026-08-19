@@ -54,6 +54,32 @@ final class InMemoryApplicationUseTracker: ApplicationUseTracking {
     }
 }
 
+@MainActor
+final class PersistentApplicationUseTracker: ApplicationUseTracking {
+    static let storageKey = "applicationLaunchCounts"
+
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    func score(for application: ApplicationCandidate) -> Int {
+        launchCounts[application.url.absoluteString, default: 0]
+    }
+
+    func recordLaunch(of application: ApplicationCandidate) {
+        var counts = launchCounts
+        let applicationID = application.url.absoluteString
+        counts[applicationID, default: 0] += 1
+        defaults.set(counts, forKey: Self.storageKey)
+    }
+
+    private var launchCounts: [String: Int] {
+        defaults.dictionary(forKey: Self.storageKey) as? [String: Int] ?? [:]
+    }
+}
+
 struct LauncherState: Equatable {
     var isVisible = false
     var query = ""

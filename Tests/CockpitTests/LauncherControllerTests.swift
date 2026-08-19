@@ -141,6 +141,25 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertEqual(controller.state.selectedResult, .application(notes))
     }
 
+    func testSuccessfulApplicationLaunchRecordsUsageWithoutCountingSelectionChanges() {
+        let findMy = application("Find My")
+        let finder = application("Finder")
+        let tracker = InMemoryApplicationUseTracker()
+        let controller = makeController(catalog: StubCatalog(applications: [findMy, finder]), useTracker: tracker)
+        controller.invoke()
+        controller.updateQuery("find")
+
+        controller.moveSelection(by: 1)
+        XCTAssertEqual(tracker.score(for: finder), 0)
+
+        controller.executeSelectedResult()
+        XCTAssertEqual(tracker.score(for: finder), 1)
+
+        controller.invoke()
+        controller.updateQuery("find")
+        XCTAssertEqual(controller.state.selectedResult, .application(finder))
+    }
+
     func testSelectingAndExecutingApplicationDelegatesToTypedLauncher() {
         let clock = application("Clock")
         let notes = application("Notes")
@@ -288,7 +307,8 @@ final class LauncherControllerTests: XCTestCase {
         filenameIndex: StubFilenameIndex = StubFilenameIndex(files: []),
         fileOpener: RecordingFileOpener = RecordingFileOpener(),
         fileRevealer: RecordingFileRevealer = RecordingFileRevealer(),
-        calculationCopier: RecordingCalculationCopier = RecordingCalculationCopier()
+        calculationCopier: RecordingCalculationCopier = RecordingCalculationCopier(),
+        useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker()
     ) -> LauncherController {
         LauncherController(
             catalog: catalog,
@@ -300,7 +320,8 @@ final class LauncherControllerTests: XCTestCase {
             filenameIndex: filenameIndex,
             fileOpener: fileOpener,
             fileRevealer: fileRevealer,
-            calculationCopier: calculationCopier
+            calculationCopier: calculationCopier,
+            useTracker: useTracker
         )
     }
 }

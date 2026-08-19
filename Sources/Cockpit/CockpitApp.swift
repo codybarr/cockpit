@@ -13,6 +13,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         self?.registerLauncherHotkey(hotkey) ?? false
     }
     private let applicationCatalog = ApplicationCatalogCache()
+    private let applicationUseTracker = PersistentApplicationUseTracker()
     private lazy var filenameIndex = try! FilenameIndex(databaseURL: Self.filenameIndexURL)
     private lazy var launcherController = LauncherController(
         catalog: applicationCatalog,
@@ -23,7 +24,8 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         filenameIndex: filenameIndex,
         fileOpener: workspaceLauncher,
         fileRevealer: workspaceLauncher,
-        calculationCopier: calculationCopier
+        calculationCopier: calculationCopier,
+        useTracker: applicationUseTracker
     )
     private var panelController: LauncherPanelController!
     private var hotkey: GlobalHotkey?
