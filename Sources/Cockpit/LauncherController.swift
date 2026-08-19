@@ -31,6 +31,11 @@ protocol FileRevealing: AnyObject {
 }
 
 @MainActor
+protocol CalculationCopying: AnyObject {
+    func copy(_ calculation: Calculation) throws
+}
+
+@MainActor
 protocol ApplicationUseTracking: AnyObject {
     func score(for application: ApplicationCandidate) -> Int
     func recordLaunch(of application: ApplicationCandidate)
@@ -82,6 +87,7 @@ final class LauncherController: ObservableObject {
     private let filenameIndex: any FilenameIndexing
     private let fileOpener: any FileOpening
     private let fileRevealer: any FileRevealing
+    private let calculationCopier: any CalculationCopying
     private let useTracker: any ApplicationUseTracking
     private let search: ApplicationSearch
     @Published private(set) var state = LauncherState()
@@ -96,6 +102,7 @@ final class LauncherController: ObservableObject {
         filenameIndex: any FilenameIndexing,
         fileOpener: any FileOpening,
         fileRevealer: any FileRevealing,
+        calculationCopier: any CalculationCopying,
         useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker(),
         search: ApplicationSearch = ApplicationSearch()
     ) {
@@ -108,6 +115,7 @@ final class LauncherController: ObservableObject {
         self.filenameIndex = filenameIndex
         self.fileOpener = fileOpener
         self.fileRevealer = fileRevealer
+        self.calculationCopier = calculationCopier
         self.useTracker = useTracker
         self.search = search
     }
@@ -140,6 +148,8 @@ final class LauncherController: ObservableObject {
             if query.hasPrefix("'") {
                 let filenameQuery = String(query.dropFirst()).trimmingCharacters(in: .whitespacesAndNewlines)
                 state.results = search.ranked(try filenameIndex.matches(for: filenameQuery).map(LauncherResult.file), for: filenameQuery)
+            } else if let calculation = try? Calculator.calculate(query) {
+                state.results = [.calculation(calculation)]
             } else {
                 let applications = try catalog.scan().map(LauncherResult.application)
                 let panes = systemSettingsPaneCatalog.panes().map(LauncherResult.systemSettingsPane)
@@ -192,6 +202,8 @@ final class LauncherController: ObservableObject {
                 try fileOpener.open(file)
             case let .systemAction(action):
                 try systemActionExecutor.execute(action)
+            case let .calculation(calculation):
+                try calculationCopier.copy(calculation)
             }
             dismiss()
         } catch {
@@ -207,7 +219,7 @@ final class LauncherController: ObservableObject {
             case let .application(application): try revealer.reveal(application)
             case .systemSettingsPane: return
             case let .file(file): try fileRevealer.reveal(file)
-            case .systemAction: return
+            case .systemAction, .calculation: return
             }
             dismiss()
         } catch {

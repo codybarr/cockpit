@@ -159,6 +159,31 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertFalse(controller.state.isVisible)
     }
 
+    func testValidArithmeticExpressionShowsCalculatorResultAndCopiesItWhenExecuted() {
+        let copier = RecordingCalculationCopier()
+        let controller = makeController(catalog: StubCatalog(applications: []), calculationCopier: copier)
+        controller.invoke()
+
+        controller.updateQuery("$20 * 1.08")
+
+        XCTAssertEqual(controller.state.results, [.calculation(Calculation(value: "21.6"))])
+        controller.executeSelectedResult()
+
+        XCTAssertEqual(copier.copiedCalculations, [Calculation(value: "21.6")])
+        XCTAssertFalse(controller.state.isVisible)
+    }
+
+    func testMalformedArithmeticExpressionFallsThroughToNormalLauncherSearch() {
+        let catalog = StubCatalog(applications: [])
+        let controller = makeController(catalog: catalog)
+        controller.invoke()
+
+        controller.updateQuery("2 +")
+
+        XCTAssertTrue(controller.state.results.isEmpty)
+        XCTAssertEqual(catalog.scanCount, 1)
+    }
+
     func testQueryIncludesSystemActionsAndRanksThemWithApplicationResults() {
         let restartUtility = application("Restart Utility")
         let controller = makeController(catalog: StubCatalog(applications: [restartUtility]))
@@ -240,7 +265,8 @@ final class LauncherControllerTests: XCTestCase {
         systemActionExecutor: RecordingSystemActionExecutor = RecordingSystemActionExecutor(),
         filenameIndex: StubFilenameIndex = StubFilenameIndex(files: []),
         fileOpener: RecordingFileOpener = RecordingFileOpener(),
-        fileRevealer: RecordingFileRevealer = RecordingFileRevealer()
+        fileRevealer: RecordingFileRevealer = RecordingFileRevealer(),
+        calculationCopier: RecordingCalculationCopier = RecordingCalculationCopier()
     ) -> LauncherController {
         LauncherController(
             catalog: catalog,
@@ -251,7 +277,8 @@ final class LauncherControllerTests: XCTestCase {
             systemActionExecutor: systemActionExecutor,
             filenameIndex: filenameIndex,
             fileOpener: fileOpener,
-            fileRevealer: fileRevealer
+            fileRevealer: fileRevealer,
+            calculationCopier: calculationCopier
         )
     }
 }
@@ -267,6 +294,12 @@ private final class StubFilenameIndex: FilenameIndexing {
     func removeIndexedFolder(_ folder: URL) throws {}
     func retry(folder: URL) throws {}
     func matches(for query: String) throws -> [FilenameCandidate] { files }
+}
+
+@MainActor
+private final class RecordingCalculationCopier: CalculationCopying {
+    private(set) var copiedCalculations: [Calculation] = []
+    func copy(_ calculation: Calculation) throws { copiedCalculations.append(calculation) }
 }
 
 @MainActor

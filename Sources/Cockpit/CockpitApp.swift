@@ -6,6 +6,7 @@ import SwiftUI
 @MainActor
 final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let workspaceLauncher = WorkspaceApplicationLauncher()
+    private let calculationCopier = PasteboardCalculationCopier()
     private let systemActionExecutor = MacOSSystemActionExecutor()
     private let loginItemSettings = LoginItemSettings()
     private lazy var launcherHotkeySettings = LauncherHotkeySettings { [weak self] hotkey in
@@ -21,7 +22,8 @@ final class CockpitApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
         systemActionExecutor: systemActionExecutor,
         filenameIndex: filenameIndex,
         fileOpener: workspaceLauncher,
-        fileRevealer: workspaceLauncher
+        fileRevealer: workspaceLauncher,
+        calculationCopier: calculationCopier
     )
     private var panelController: LauncherPanelController!
     private var hotkey: GlobalHotkey?
@@ -163,6 +165,23 @@ final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevea
         case unavailable
 
         var errorDescription: String? { "The application is no longer available." }
+    }
+}
+
+@MainActor
+final class PasteboardCalculationCopier: CalculationCopying {
+    func copy(_ calculation: Calculation) throws {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        guard pasteboard.setString(calculation.value, forType: .string) else {
+            throw CopyError.unavailable
+        }
+    }
+
+    private enum CopyError: LocalizedError {
+        case unavailable
+
+        var errorDescription: String? { "The clipboard is unavailable." }
     }
 }
 
@@ -437,6 +456,9 @@ private struct LauncherResultRow: View {
         case let .systemAction(action):
             Image(systemName: action.symbolName)
                 .font(.system(size: 26))
+        case .calculation:
+            Image(systemName: "plus.forwardslash.minus")
+                .font(.system(size: 24))
         }
     }
 
@@ -461,6 +483,8 @@ private struct LauncherResultRow: View {
             isRevealHintVisible ? "Reveal file in Finder" : file.url.path
         case .systemAction:
             "System action"
+        case .calculation:
+            "Copy result"
         }
     }
 }

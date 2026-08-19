@@ -26,7 +26,8 @@ final class PerformanceBenchmarks: XCTestCase {
             systemActionExecutor: NoopSystemActionExecutor(),
             filenameIndex: EmptyFilenameIndex(),
             fileOpener: NoopWorkspace(),
-            fileRevealer: NoopWorkspace()
+            fileRevealer: NoopWorkspace(),
+            calculationCopier: NoopWorkspace()
         )
         let hotkeySamples = samples(count: 30) {
             controller.invoke()
@@ -60,12 +61,13 @@ private final class EmptyCatalog: ApplicationCataloging {
 }
 
 @MainActor
-private final class NoopWorkspace: ApplicationLaunching, ApplicationRevealing, SystemSettingsPaneLaunching, FileOpening, FileRevealing {
+private final class NoopWorkspace: ApplicationLaunching, ApplicationRevealing, SystemSettingsPaneLaunching, FileOpening, FileRevealing, CalculationCopying {
     func launch(_: ApplicationCandidate) throws {}
     func launch(_: SystemSettingsPane) throws {}
     func reveal(_: ApplicationCandidate) throws {}
     func open(_: FilenameCandidate) throws {}
     func reveal(_: FilenameCandidate) throws {}
+    func copy(_: Calculation) throws {}
 }
 
 @MainActor
