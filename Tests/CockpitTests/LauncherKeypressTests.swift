@@ -13,6 +13,15 @@ final class LauncherKeypressTests: XCTestCase {
         XCTAssertEqual(commandComma.action, .showSettings)
     }
 
+    func testCommandVDispatchesPasteToTheFocusedLaunchpad() {
+        let commandV = LauncherKeypress(
+            keyCode: UInt16(kVK_ANSI_V),
+            modifierFlags: [.command]
+        )
+
+        XCTAssertEqual(commandV.action, .paste)
+    }
+
     func testCommaWithoutCommandDoesNotRequestSettings() {
         let comma = LauncherKeypress(
             keyCode: UInt16(kVK_ANSI_Comma),
