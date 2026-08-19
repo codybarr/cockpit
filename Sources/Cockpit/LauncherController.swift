@@ -125,14 +125,16 @@ final class LauncherController: ObservableObject {
     }
 
     @discardableResult
-    func startFilenameSearch() -> Bool {
-        guard state.query.isEmpty else { return false }
+    func startFilenameSearch(replacingExistingQuery: Bool = false) -> Bool {
+        guard state.query.isEmpty || replacingExistingQuery else { return false }
         updateQuery("'")
         return true
     }
 
     func updateQuery(_ query: String) {
-        let query = state.query.isEmpty && query.hasPrefix(" ")
+        // AppKit applies Cmd-A's selection in the text field, but SwiftUI sends
+        // the replacement text before this model has observed an empty query.
+        let query = query == " " || (state.query.isEmpty && query.hasPrefix(" "))
             ? "'" + query.dropFirst()
             : query
         state.query = query

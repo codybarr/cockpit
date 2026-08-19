@@ -222,8 +222,8 @@ private final class LauncherPanelController {
         controller.moveSelection(by: offset)
     }
 
-    fileprivate func startFilenameSearch() -> Bool {
-        controller.startFilenameSearch()
+    fileprivate func startFilenameSearch(replacingExistingQuery: Bool = false) -> Bool {
+        controller.startFilenameSearch(replacingExistingQuery: replacingExistingQuery)
     }
 
     fileprivate func setRevealHintVisible(_ isVisible: Bool) {
@@ -327,7 +327,12 @@ private final class LauncherPanel: NSPanel {
         }
 
         switch event.keyCode {
-        case UInt16(kVK_Space) where controller?.startFilenameSearch() == true: return
+        case UInt16(kVK_Space):
+            if hasFullySelectedLaunchpadText {
+                _ = controller?.startFilenameSearch(replacingExistingQuery: true)
+                return
+            }
+            if controller?.startFilenameSearch() == true { return }
         case UInt16(kVK_ANSI_A) where event.modifierFlags.contains(.command):
             NSApp.sendAction(#selector(NSResponder.selectAll(_:)), to: nil, from: self)
         case UInt16(kVK_Return) where event.modifierFlags.contains(.command): controller?.revealSelection()
@@ -337,6 +342,14 @@ private final class LauncherPanel: NSPanel {
         case UInt16(kVK_Escape): controller?.hide()
         default: super.sendEvent(event)
         }
+    }
+
+    private var hasFullySelectedLaunchpadText: Bool {
+        guard let editor = firstResponder as? NSTextView else { return false }
+        let selection = editor.selectedRange()
+        return !editor.string.isEmpty
+            && selection.location == 0
+            && selection.length == (editor.string as NSString).length
     }
 }
 

@@ -43,6 +43,28 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertTrue(controller.state.results.isEmpty)
     }
 
+    func testLeadingSpaceStartsFilenameSearchWhenItReplacesASelectedQuery() {
+        let controller = makeController(catalog: StubCatalog(applications: []))
+        controller.invoke()
+        controller.updateQuery("report")
+
+        // Cmd-A selects the current Launchpad text, so typing space replaces the
+        // visible query even though the controller still holds the old value.
+        controller.updateQuery(" ")
+
+        XCTAssertEqual(controller.state.query, "'")
+        XCTAssertTrue(controller.state.results.isEmpty)
+    }
+
+    func testStartingFilenameSearchCanReplaceAnExistingQuery() {
+        let controller = makeController(catalog: StubCatalog(applications: []))
+        controller.invoke()
+        controller.updateQuery("report")
+
+        XCTAssertTrue(controller.startFilenameSearch(replacingExistingQuery: true))
+        XCTAssertEqual(controller.state.query, "'")
+    }
+
     func testQueryingRanksApplicationsAndSelectsTheBestResult() {
         let clock = application("Clock")
         let calendar = application("Calendar")
