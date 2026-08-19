@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import ServiceManagement
 
@@ -7,14 +8,6 @@ enum LoginItemStatus: Equatable {
     case approvalRequired
     case unavailable
 
-    var menuTitle: String {
-        switch self {
-        case .disabled: "Launch at Login: Off"
-        case .enabled: "Launch at Login: On"
-        case .approvalRequired: "Launch at Login: Approval Needed"
-        case .unavailable: "Launch at Login: Unavailable"
-        }
-    }
 }
 
 @MainActor
@@ -46,9 +39,9 @@ final class MainAppLoginItemService: LoginItemManaging {
 }
 
 @MainActor
-final class LoginItemSettings {
+final class LoginItemSettings: ObservableObject {
     private let service: any LoginItemManaging
-    private(set) var status: LoginItemStatus
+    @Published private(set) var status: LoginItemStatus
 
     init(service: any LoginItemManaging = MainAppLoginItemService()) {
         self.service = service

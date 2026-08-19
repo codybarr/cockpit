@@ -13,6 +13,16 @@ final class LoginItemSettingsTests: XCTestCase {
         XCTAssertEqual(settings.status, .enabled)
     }
 
+    func testDisablingUnregistersTheOptInLoginItem() throws {
+        let service = StubLoginItemService(status: .enabled)
+        let settings = LoginItemSettings(service: service)
+
+        try settings.setEnabled(false)
+
+        XCTAssertEqual(service.disableCount, 1)
+        XCTAssertEqual(settings.status, .disabled)
+    }
+
     func testApprovalNeededStatusDoesNotAttemptToOverrideSystemSettings() throws {
         let service = StubLoginItemService(status: .approvalRequired)
         let settings = LoginItemSettings(service: service)

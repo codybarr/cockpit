@@ -58,7 +58,14 @@ final class IndexedFoldersSettings: ObservableObject {
 
 @MainActor
 final class SettingsWindowController: NSWindowController {
-    init(index: any FilenameIndexing, hotkeySettings: LauncherHotkeySettings) {
+    private let loginItemSettings: LoginItemSettings
+
+    init(
+        index: any FilenameIndexing,
+        hotkeySettings: LauncherHotkeySettings,
+        loginItemSettings: LoginItemSettings = LoginItemSettings()
+    ) {
+        self.loginItemSettings = loginItemSettings
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 560, height: 480),
             styleMask: [.titled, .closable],
@@ -70,7 +77,8 @@ final class SettingsWindowController: NSWindowController {
         window.center()
         let hostingView = NSHostingView(rootView: SettingsView(
             indexedFoldersSettings: IndexedFoldersSettings(index: index),
-            hotkeySettings: hotkeySettings
+            hotkeySettings: hotkeySettings,
+            loginItemSettings: loginItemSettings
         ))
         hostingView.sizingOptions = []
         window.contentView = hostingView
@@ -81,6 +89,7 @@ final class SettingsWindowController: NSWindowController {
     required init?(coder: NSCoder) { nil }
 
     func show() {
+        loginItemSettings.refresh()
         window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -89,9 +98,22 @@ final class SettingsWindowController: NSWindowController {
 private struct SettingsView: View {
     @ObservedObject var indexedFoldersSettings: IndexedFoldersSettings
     @ObservedObject var hotkeySettings: LauncherHotkeySettings
+    @ObservedObject var loginItemSettings: LoginItemSettings
+    @State private var launchAtLoginError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            Toggle("Launch at Login", isOn: Binding(
+                get: { loginItemSettings.status == .enabled },
+                set: { isEnabled in setLaunchAtLogin(isEnabled) }
+            ))
+
+            if let launchAtLoginError {
+                Text(launchAtLoginError).foregroundStyle(.red).font(.caption)
+            }
+
+            Divider()
+
             LauncherHotkeyPicker(settings: hotkeySettings)
 
             Divider()
@@ -140,5 +162,15 @@ private struct SettingsView: View {
             }
         }
         .padding(20)
+    }
+
+    private func setLaunchAtLogin(_ isEnabled: Bool) {
+        do {
+            try loginItemSettings.setEnabled(isEnabled)
+            launchAtLoginError = nil
+        } catch {
+            loginItemSettings.refresh()
+            launchAtLoginError = error.localizedDescription
+        }
     }
 }
