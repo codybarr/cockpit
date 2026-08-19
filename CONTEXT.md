@@ -8,6 +8,10 @@ Cockpit is a local macOS launcher for quickly opening applications and files wit
 The keyboard-invoked Cockpit surface that accepts a query and presents executable results.
 _Avoid_: search bar, palette
 
+**Launchpad**:
+The primary text field in the Launcher where a user enters a query.
+_Avoid_: search bar, query field
+
 **Indexed folder**:
 A user-selected filesystem location whose filenames Cockpit discovers and maintains locally.
 _Avoid_: watched folder, catalog
