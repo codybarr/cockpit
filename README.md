@@ -1,8 +1,12 @@
-![Cockpit screenshot](docs/images/cockpit-screenshot.png)
+<p align="center">
+  <img src="Assets/CockpitIcon.svg" alt="Cockpit icon" width="128" height="128">
+</p>
 
 # Cockpit
 
 Cockpit is a local macOS launcher for opening applications and deliberately indexed filenames without Spotlight.
+
+![Cockpit screenshot](docs/images/cockpit-screenshot.png)
 
 ## Build and install
 
