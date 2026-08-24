@@ -13,12 +13,22 @@ final class LauncherKeypressTests: XCTestCase {
         XCTAssertEqual(commandComma.action, .showSettings)
     }
 
-    func testCommandVDispatchesPasteToTheFocusedLaunchpad() {
+    func testCommandEditingShortcutsDispatchToTheFocusedLaunchpad() {
+        let commandC = LauncherKeypress(
+            keyCode: UInt16(kVK_ANSI_C),
+            modifierFlags: [.command]
+        )
+        let commandX = LauncherKeypress(
+            keyCode: UInt16(kVK_ANSI_X),
+            modifierFlags: [.command]
+        )
         let commandV = LauncherKeypress(
             keyCode: UInt16(kVK_ANSI_V),
             modifierFlags: [.command]
         )
 
+        XCTAssertEqual(commandC.action, .copy)
+        XCTAssertEqual(commandX.action, .cut)
         XCTAssertEqual(commandV.action, .paste)
     }
 

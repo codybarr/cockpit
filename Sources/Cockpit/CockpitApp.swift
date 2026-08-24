@@ -281,6 +281,8 @@ private final class LauncherPanelController {
 struct LauncherKeypress {
     enum Action: Equatable {
         case showSettings
+        case copy
+        case cut
         case paste
         case passThrough
     }
@@ -291,6 +293,8 @@ struct LauncherKeypress {
         if modifierFlags.contains(.command) {
             switch keyCode {
             case UInt16(kVK_ANSI_Comma): action = .showSettings
+            case UInt16(kVK_ANSI_C): action = .copy
+            case UInt16(kVK_ANSI_X): action = .cut
             case UInt16(kVK_ANSI_V): action = .paste
             default: action = .passThrough
             }
@@ -320,6 +324,12 @@ private final class LauncherPanel: NSPanel {
         switch LauncherKeypress(keyCode: event.keyCode, modifierFlags: event.modifierFlags).action {
         case .showSettings:
             controller?.showSettingsPanel()
+            return
+        case .copy:
+            NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: self)
+            return
+        case .cut:
+            NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: self)
             return
         case .paste:
             NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: self)
