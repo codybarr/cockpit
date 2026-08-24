@@ -340,11 +340,14 @@ private final class LauncherPanel: NSPanel {
 
         switch event.keyCode {
         case UInt16(kVK_Space):
-            if hasFullySelectedLaunchpadText {
-                _ = controller?.startFilenameSearch(replacingExistingQuery: true)
-                return
+            let shouldPassThrough = LauncherSpaceKeypress.shouldPassThrough(
+                isLaunchpadTextFullySelected: hasFullySelectedLaunchpadText
+            ) { [weak controller] replacingExistingQuery in
+                controller?.startFilenameSearch(replacingExistingQuery: replacingExistingQuery) ?? false
             }
-            if controller?.startFilenameSearch() == true { return }
+            if shouldPassThrough {
+                super.sendEvent(event)
+            }
         case UInt16(kVK_ANSI_A) where event.modifierFlags.contains(.command):
             NSApp.sendAction(#selector(NSResponder.selectAll(_:)), to: nil, from: self)
         case UInt16(kVK_Return) where event.modifierFlags.contains(.command): controller?.revealSelection()
@@ -362,6 +365,19 @@ private final class LauncherPanel: NSPanel {
         return !editor.string.isEmpty
             && selection.location == 0
             && selection.length == (editor.string as NSString).length
+    }
+}
+
+struct LauncherSpaceKeypress {
+    static func shouldPassThrough(
+        isLaunchpadTextFullySelected: Bool,
+        startFilenameSearch: (Bool) -> Bool
+    ) -> Bool {
+        if isLaunchpadTextFullySelected {
+            _ = startFilenameSearch(true)
+            return false
+        }
+        return !startFilenameSearch(false)
     }
 }
 

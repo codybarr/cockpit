@@ -40,4 +40,39 @@ final class LauncherKeypressTests: XCTestCase {
 
         XCTAssertEqual(comma.action, .passThrough)
     }
+
+    func testSpacePassesThroughWhenFilenameSearchCannotStart() {
+        var replacementModes: [Bool] = []
+
+        let shouldPassThrough = LauncherSpaceKeypress.shouldPassThrough(
+            isLaunchpadTextFullySelected: false
+        ) { replacingExistingQuery in
+            replacementModes.append(replacingExistingQuery)
+            return false
+        }
+
+        XCTAssertTrue(shouldPassThrough)
+        XCTAssertEqual(replacementModes, [false])
+    }
+
+    func testSpaceStartsFilenameSearchWhenTheLaunchpadIsEmptyOrSelected() {
+        var replacementModes: [Bool] = []
+
+        let startsFromEmptyLaunchpad = LauncherSpaceKeypress.shouldPassThrough(
+            isLaunchpadTextFullySelected: false
+        ) { replacingExistingQuery in
+            replacementModes.append(replacingExistingQuery)
+            return true
+        }
+        let replacesSelectedLaunchpad = LauncherSpaceKeypress.shouldPassThrough(
+            isLaunchpadTextFullySelected: true
+        ) { replacingExistingQuery in
+            replacementModes.append(replacingExistingQuery)
+            return true
+        }
+
+        XCTAssertFalse(startsFromEmptyLaunchpad)
+        XCTAssertFalse(replacesSelectedLaunchpad)
+        XCTAssertEqual(replacementModes, [false, true])
+    }
 }

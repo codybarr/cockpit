@@ -43,17 +43,38 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertTrue(controller.state.results.isEmpty)
     }
 
-    func testLeadingSpaceStartsFilenameSearchWhenItReplacesASelectedQuery() {
+    func testLiteralSpaceIsNotRewrittenWhenTheLaunchpadAlreadyHasInput() {
+        let controller = makeController(catalog: StubCatalog(applications: []))
+        controller.invoke()
+        controller.updateQuery("Drew")
+
+        controller.updateQuery(" ")
+
+        XCTAssertEqual(controller.state.query, " ")
+    }
+
+    func testNormalAndFilenameQueriesKeepInternalSpaces() {
+        let controller = makeController(catalog: StubCatalog(applications: []))
+        controller.invoke()
+
+        controller.updateQuery("Drew Estate")
+        XCTAssertEqual(controller.state.query, "Drew Estate")
+
+        controller.updateQuery("'Drew Estate")
+        XCTAssertEqual(controller.state.query, "'Drew Estate")
+    }
+
+    func testSelectedQueryReplacementKeepsTheFilenamePrefixForSpaceAndApostropheInput() {
         let controller = makeController(catalog: StubCatalog(applications: []))
         controller.invoke()
         controller.updateQuery("report")
 
-        // Cmd-A selects the current Launchpad text, so typing space replaces the
-        // visible query even though the controller still holds the old value.
-        controller.updateQuery(" ")
-
+        XCTAssertTrue(controller.startFilenameSearch(replacingExistingQuery: true))
         XCTAssertEqual(controller.state.query, "'")
-        XCTAssertTrue(controller.state.results.isEmpty)
+
+        controller.updateQuery("report")
+        controller.updateQuery("'")
+        XCTAssertEqual(controller.state.query, "'")
     }
 
     func testStartingFilenameSearchCanReplaceAnExistingQuery() {
