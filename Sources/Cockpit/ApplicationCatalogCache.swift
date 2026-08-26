@@ -32,7 +32,7 @@ final class ApplicationCatalogCache: ApplicationCataloging, @unchecked Sendable 
     }
 
     func refreshInBackground() {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        DispatchQueue.global(qos: .utility).async { [weak self] in
             do {
                 try self?.refresh()
             } catch {

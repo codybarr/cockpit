@@ -9,45 +9,56 @@ final class PerformanceBenchmarks: XCTestCase {
             throw XCTSkip("Set COCKPIT_RUN_BENCHMARKS=1 on an Apple-silicon Mac to run performance acceptance benchmarks.")
         }
 
-        let candidates = (0..<50_000).map { index in
-            LauncherResult.file(FilenameCandidate(url: URL(fileURLWithPath: "/fixture/Quarterly Report \(index).pdf")))
+        let files = (0..<50_000).map { index in
+            FilenameCandidate(url: URL(fileURLWithPath: "/fixture/Quarterly Report \(index).pdf"))
         }
-        let search = ApplicationSearch()
-        let matches = candidates.filter { $0.normalizedSearchLabel.contains("report 49999") }
-        let querySamples = samples(count: 30) {
-            _ = search.ranked(matches, for: "report 49999")
-        }
+        let controller = makeController(filenameIndex: FixtureFilenameIndex(files: files))
+        controller.updateQuery("'report") // Warm the fixture and SwiftUI observation machinery.
 
-        let controller = LauncherController(
-            catalog: EmptyCatalog(),
-            launcher: NoopWorkspace(),
-            revealer: NoopWorkspace(),
-            systemSettingsPaneLauncher: NoopWorkspace(),
-            systemActionExecutor: NoopSystemActionExecutor(),
-            filenameIndex: EmptyFilenameIndex(),
-            fileOpener: NoopWorkspace(),
-            fileRevealer: NoopWorkspace(),
-            calculationCopier: NoopWorkspace()
-        )
+        let querySamples = samples(count: 30) {
+            controller.updateQuery("'report")
+        }
+        let selectionSamples = samples(count: 30) {
+            controller.moveSelection(by: 1)
+        }
         let hotkeySamples = samples(count: 30) {
             controller.invoke()
         }
 
         let queryP95 = percentile(querySamples, 0.95)
         let queryP99 = percentile(querySamples, 0.99)
+        let selectionP99 = percentile(selectionSamples, 0.99)
         let hotkeyP95 = percentile(hotkeySamples, 0.95)
-        XCTContext.runActivity(named: String(format: "50,000-item fixture: query p95 %.2f ms, p99 %.2f ms; hotkey p95 %.2f ms", queryP95 * 1_000, queryP99 * 1_000, hotkeyP95 * 1_000)) { _ in }
+        let hotkeyP99 = percentile(hotkeySamples, 0.99)
+        XCTContext.runActivity(named: String(format: "50,000-item fixture: query p95 %.2f ms, p99 %.2f ms; selection p99 %.2f ms; hotkey p95 %.2f ms, p99 %.2f ms", queryP95 * 1_000, queryP99 * 1_000, selectionP99 * 1_000, hotkeyP95 * 1_000, hotkeyP99 * 1_000)) { _ in }
 
         XCTAssertLessThanOrEqual(queryP95, 0.016, "Query p95 must be at most 16 ms.")
         XCTAssertLessThanOrEqual(queryP99, 0.033, "Query p99 must be at most 33 ms.")
-        XCTAssertLessThanOrEqual(hotkeyP95, 0.100, "Hotkey-to-ready p95 must be at most 100 ms.")
+        XCTAssertLessThanOrEqual(selectionP99, 0.016, "Selection p99 must fit within one 60 Hz frame.")
+        XCTAssertLessThanOrEqual(hotkeyP95, 0.033, "Hotkey-to-ready p95 must be at most 33 ms.")
+        XCTAssertLessThanOrEqual(hotkeyP99, 0.050, "Hotkey-to-ready p99 must be at most 50 ms.")
+    }
+
+    private func makeController(filenameIndex: any FilenameIndexing) -> LauncherController {
+        LauncherController(
+            catalog: EmptyCatalog(),
+            launcher: NoopWorkspace(),
+            revealer: NoopWorkspace(),
+            systemSettingsPaneCatalog: EmptySystemSettingsPaneCatalog(),
+            systemSettingsPaneLauncher: NoopWorkspace(),
+            systemActionExecutor: NoopSystemActionExecutor(),
+            filenameIndex: filenameIndex,
+            fileOpener: NoopWorkspace(),
+            fileRevealer: NoopWorkspace(),
+            calculationCopier: NoopWorkspace()
+        )
     }
 
     private func samples(count: Int, operation: () -> Void) -> [TimeInterval] {
         (0..<count).map { _ in
-            let start = Date()
+            let start = DispatchTime.now().uptimeNanoseconds
             operation()
-            return Date().timeIntervalSince(start)
+            return Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000_000
         }.sorted()
     }
 
@@ -75,11 +86,21 @@ private final class NoopSystemActionExecutor: SystemActionExecuting {
     func execute(_: SystemAction) throws {}
 }
 
-private final class EmptyFilenameIndex: FilenameIndexing {
+private struct EmptySystemSettingsPaneCatalog: SystemSettingsPaneCataloging {
+    func panes() -> [SystemSettingsPane] { [] }
+}
+
+private final class FixtureFilenameIndex: FilenameIndexing {
+    private let snapshot: FilenameSearchSnapshot
+
+    init(files: [FilenameCandidate]) { snapshot = FilenameSearchSnapshot(files) }
+
     var indexedFolders: [URL] { [] }
     func folderState(for _: URL) -> IndexedFolderState { .available }
     func addIndexedFolder(_: URL) throws {}
     func removeIndexedFolder(_: URL) throws {}
     func retry(folder _: URL) throws {}
-    func matches(for _: String) throws -> [FilenameCandidate] { [] }
+    func matches(for query: String) throws -> [FilenameCandidate] {
+        snapshot.matches(for: SearchNormalizer.normalize(query))
+    }
 }

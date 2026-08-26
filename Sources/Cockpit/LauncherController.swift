@@ -59,9 +59,11 @@ final class PersistentApplicationUseTracker: ApplicationUseTracking {
     static let storageKey = "applicationLaunchCounts"
 
     private let defaults: UserDefaults
+    private var launchCounts: [String: Int]
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        launchCounts = defaults.dictionary(forKey: Self.storageKey) as? [String: Int] ?? [:]
     }
 
     func score(for application: ApplicationCandidate) -> Int {
@@ -69,14 +71,9 @@ final class PersistentApplicationUseTracker: ApplicationUseTracking {
     }
 
     func recordLaunch(of application: ApplicationCandidate) {
-        var counts = launchCounts
         let applicationID = application.url.absoluteString
-        counts[applicationID, default: 0] += 1
-        defaults.set(counts, forKey: Self.storageKey)
-    }
-
-    private var launchCounts: [String: Int] {
-        defaults.dictionary(forKey: Self.storageKey) as? [String: Int] ?? [:]
+        launchCounts[applicationID, default: 0] += 1
+        defaults.set(launchCounts, forKey: Self.storageKey)
     }
 }
 
@@ -176,7 +173,9 @@ final class LauncherController: ObservableObject {
         do {
             if query.hasPrefix("'") {
                 let filenameQuery = String(query.dropFirst()).trimmingCharacters(in: .whitespacesAndNewlines)
-                state.results = search.ranked(try filenameIndex.matches(for: filenameQuery).map(LauncherResult.file), for: filenameQuery)
+                state.results = filenameQuery.count < 3
+                    ? []
+                    : search.ranked(try filenameIndex.matches(for: filenameQuery).map(LauncherResult.file), for: filenameQuery)
             } else if let calculation = try? Calculator.calculate(query) {
                 state.results = [.calculation(calculation)]
             } else {

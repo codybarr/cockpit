@@ -65,6 +65,29 @@ protocol SystemSettingsPaneCataloging {
     func panes() -> [SystemSettingsPane]
 }
 
+/// Serves a stable System Settings snapshot while the disk-backed catalog refreshes off the main thread.
+final class SystemSettingsPaneCache: SystemSettingsPaneCataloging, @unchecked Sendable {
+    private let catalog: any SystemSettingsPaneCataloging
+    private let lock = NSLock()
+    private var availablePanes: [SystemSettingsPane] = []
+
+    init(catalog: any SystemSettingsPaneCataloging = SystemSettingsPaneCatalog()) {
+        self.catalog = catalog
+    }
+
+    func panes() -> [SystemSettingsPane] {
+        lock.withLock { availablePanes }
+    }
+
+    func refreshInBackground() {
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self else { return }
+            let panes = catalog.panes()
+            lock.withLock { availablePanes = panes }
+        }
+    }
+}
+
 /// Provides destinations that use System Settings' public URL scheme.
 struct SystemSettingsPaneCatalog: SystemSettingsPaneCataloging {
     private let fileManager: FileManager

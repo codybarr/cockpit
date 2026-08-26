@@ -37,6 +37,20 @@ final class ApplicationCatalogTests: XCTestCase {
         XCTAssertFalse(ApplicationCatalog.standardRoots.contains { $0.path.hasPrefix("/System/Library") })
     }
 
+    func testSystemSettingsPaneCacheServesAnInitiallyEmptySnapshotThenRefreshesOffTheCaller() {
+        let expected = [SystemSettingsPane(name: "Displays", identifier: "com.apple.Displays-Settings.extension")]
+        let cache = SystemSettingsPaneCache(catalog: StubSystemSettingsPaneCatalog(panes: expected))
+
+        XCTAssertEqual(cache.panes(), [])
+        cache.refreshInBackground()
+
+        let refreshed = expectation(description: "System Settings panes are cached")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if cache.panes() == expected { refreshed.fulfill() }
+        }
+        wait(for: [refreshed], timeout: 1)
+    }
+
     func testSystemSettingsPaneCatalogDoesNotReturnDestinationsWhenSystemSettingsIsUnavailable() {
         let catalog = SystemSettingsPaneCatalog(systemSettingsURL: URL(fileURLWithPath: "/missing/System Settings.app"))
 
@@ -72,4 +86,11 @@ final class ApplicationCatalogTests: XCTestCase {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
     }
+}
+
+private struct StubSystemSettingsPaneCatalog: SystemSettingsPaneCataloging {
+    let availablePanes: [SystemSettingsPane]
+
+    init(panes: [SystemSettingsPane]) { availablePanes = panes }
+    func panes() -> [SystemSettingsPane] { availablePanes }
 }

@@ -13,12 +13,14 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         self?.registerLauncherHotkey(hotkey) ?? false
     }
     private let applicationCatalog = ApplicationCatalogCache()
+    private let systemSettingsPaneCatalog = SystemSettingsPaneCache()
     private let applicationUseTracker = PersistentApplicationUseTracker()
     private lazy var filenameIndex = try! FilenameIndex(databaseURL: Self.filenameIndexURL)
     private lazy var launcherController = LauncherController(
         catalog: applicationCatalog,
         launcher: workspaceLauncher,
         revealer: workspaceLauncher,
+        systemSettingsPaneCatalog: systemSettingsPaneCatalog,
         systemSettingsPaneLauncher: workspaceLauncher,
         systemActionExecutor: systemActionExecutor,
         filenameIndex: filenameIndex,
@@ -47,6 +49,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         applicationCatalog.refreshInBackground()
+        systemSettingsPaneCatalog.refreshInBackground()
         panelController = LauncherPanelController(controller: launcherController) { [weak self] in
             self?.showSettings()
         }

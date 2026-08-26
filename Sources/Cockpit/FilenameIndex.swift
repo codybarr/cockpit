@@ -36,13 +36,51 @@ extension FilenameCandidate: LauncherSearchable {
     var normalizedSearchLabel: String { normalizedName }
 }
 
+struct FilenameSearchSnapshot {
+    /// The Launcher can show only a small result window; bounding candidates keeps broad filename queries frame-paced.
+    private static let maximumMatches = 100
+    private let candidates: [FilenameCandidate]
+    private let positionsByTrigram: [UInt32: [Int]]
+
+    init(_ candidates: [FilenameCandidate] = []) {
+        self.candidates = candidates
+        positionsByTrigram = candidates.enumerated().reduce(into: [:]) { positions, candidate in
+            for trigram in Set(Self.trigrams(in: candidate.element.normalizedName)) {
+                positions[trigram, default: []].append(candidate.offset)
+            }
+        }
+    }
+
+    func matches(for normalizedQuery: String) -> [FilenameCandidate] {
+        guard let candidatePositions = Self.trigrams(in: normalizedQuery)
+            .compactMap({ positionsByTrigram[$0] })
+            .min(by: { $0.count < $1.count }) else {
+            return Array(candidates.lazy
+                .filter { $0.normalizedName.contains(normalizedQuery) }
+                .prefix(Self.maximumMatches))
+        }
+        return Array(candidatePositions.lazy
+            .map { candidates[$0] }
+            .filter { $0.normalizedName.contains(normalizedQuery) }
+            .prefix(Self.maximumMatches))
+    }
+
+    private static func trigrams(in text: String) -> [UInt32] {
+        let bytes = Array(text.utf8)
+        guard bytes.count >= 3 else { return [] }
+        return (0..<(bytes.count - 2)).map { index in
+            UInt32(bytes[index]) << 16 | UInt32(bytes[index + 1]) << 8 | UInt32(bytes[index + 2])
+        }
+    }
+}
+
 final class FilenameIndex: FilenameIndexing, @unchecked Sendable {
     private var database: OpaquePointer?
     private let fileManager: FileManager
     private let events: any FileSystemEventSource
     private let snapshotLock = NSLock()
     private let databaseLock = NSLock()
-    private var filenames: [FilenameCandidate] = []
+    private var snapshot = FilenameSearchSnapshot()
     private var unavailableFolders: Set<String> = []
 
     var indexedFolders: [URL] {
@@ -114,9 +152,7 @@ final class FilenameIndex: FilenameIndexing, @unchecked Sendable {
 
     func matches(for query: String) throws -> [FilenameCandidate] {
         let normalizedQuery = SearchNormalizer.normalize(query)
-        return snapshotLock.withLock {
-            filenames.filter { $0.normalizedName.contains(normalizedQuery) }
-        }
+        return snapshotLock.withLock { snapshot.matches(for: normalizedQuery) }
     }
 
     private func indexContents(of folder: URL) throws {
@@ -149,7 +185,7 @@ final class FilenameIndex: FilenameIndexing, @unchecked Sendable {
 
     private func rebuildSnapshot() throws {
         let candidates = try queryStrings("SELECT path FROM filenames ORDER BY path").map(URL.init(fileURLWithPath:)).map(FilenameCandidate.init(url:))
-        snapshotLock.withLock { filenames = candidates }
+        snapshotLock.withLock { snapshot = FilenameSearchSnapshot(candidates) }
     }
 
     private func enumerate(_ folder: URL, visit: (URL) throws -> Void) throws {
