@@ -181,6 +181,22 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertEqual(controller.state.selectedResult, .application(finder))
     }
 
+    func testExecutingAnApplicationDoesNotWaitForItsLaunchToComplete() {
+        let notes = application("Notes")
+        let launcher = DeferredApplicationLauncher()
+        let controller = makeController(
+            catalog: StubCatalog(applications: [notes]),
+            launcher: launcher
+        )
+        controller.invoke()
+        controller.updateQuery("notes")
+
+        controller.executeSelectedResult()
+
+        XCTAssertFalse(controller.state.isVisible, "The Launcher must dismiss before a cold application finishes launching.")
+        XCTAssertTrue(launcher.hasPendingCompletion)
+    }
+
     func testSelectingAndExecutingApplicationDelegatesToTypedLauncher() {
         let clock = application("Clock")
         let notes = application("Notes")
@@ -320,7 +336,7 @@ final class LauncherControllerTests: XCTestCase {
 
     private func makeController(
         catalog: StubCatalog,
-        launcher: RecordingApplicationLauncher = RecordingApplicationLauncher(),
+        launcher: any ApplicationLaunching = RecordingApplicationLauncher(),
         revealer: RecordingApplicationRevealer = RecordingApplicationRevealer(),
         systemSettingsPaneCatalog: StubSystemSettingsPaneCatalog = StubSystemSettingsPaneCatalog(panes: []),
         systemSettingsPaneLauncher: RecordingSystemSettingsPaneLauncher = RecordingSystemSettingsPaneLauncher(),
@@ -406,11 +422,21 @@ private final class RecordingSystemSettingsPaneLauncher: SystemSettingsPaneLaunc
 }
 
 @MainActor
+private final class DeferredApplicationLauncher: ApplicationLaunching {
+    private(set) var hasPendingCompletion = false
+
+    func launch(_: ApplicationCandidate, completion: @escaping ApplicationLaunchCompletion) throws {
+        hasPendingCompletion = true
+    }
+}
+
+@MainActor
 private final class RecordingApplicationLauncher: ApplicationLaunching {
     private(set) var launchedApplications: [ApplicationCandidate] = []
 
-    func launch(_ application: ApplicationCandidate) throws {
+    func launch(_ application: ApplicationCandidate, completion: @escaping ApplicationLaunchCompletion) throws {
         launchedApplications.append(application)
+        completion(.success(()))
     }
 }
 

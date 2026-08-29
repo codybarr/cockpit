@@ -126,9 +126,14 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
 
 @MainActor
 final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevealing, SystemSettingsPaneLaunching, FileOpening, FileRevealing {
-    func launch(_ application: ApplicationCandidate) throws {
-        guard NSWorkspace.shared.open(application.url) else {
+    func launch(_ application: ApplicationCandidate, completion: @escaping ApplicationLaunchCompletion) throws {
+        guard FileManager.default.fileExists(atPath: application.url.path) else {
             throw ApplicationError.unavailable
+        }
+
+        NSWorkspace.shared.openApplication(at: application.url, configuration: .init()) { _, error in
+            let result: Result<Void, Error> = error.map(Result.failure) ?? .success(())
+            Task { @MainActor in completion(result) }
         }
     }
 

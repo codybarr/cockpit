@@ -5,9 +5,11 @@ protocol ApplicationCataloging {
     func scan() throws -> [ApplicationCandidate]
 }
 
+typealias ApplicationLaunchCompletion = @MainActor (Result<Void, Error>) -> Void
+
 @MainActor
 protocol ApplicationLaunching: AnyObject {
-    func launch(_ application: ApplicationCandidate) throws
+    func launch(_ application: ApplicationCandidate, completion: @escaping ApplicationLaunchCompletion) throws
 }
 
 @MainActor
@@ -222,8 +224,10 @@ final class LauncherController: ObservableObject {
         do {
             switch selectedResult {
             case let .application(application):
-                try launcher.launch(application)
-                useTracker.recordLaunch(of: application)
+                try launcher.launch(application) { [weak self] result in
+                    guard case .success = result else { return }
+                    self?.useTracker.recordLaunch(of: application)
+                }
             case let .systemSettingsPane(pane):
                 try systemSettingsPaneLauncher.launch(pane)
             case let .file(file):

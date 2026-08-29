@@ -73,7 +73,7 @@ private final class EmptyCatalog: ApplicationCataloging {
 
 @MainActor
 private final class NoopWorkspace: ApplicationLaunching, ApplicationRevealing, SystemSettingsPaneLaunching, FileOpening, FileRevealing, CalculationCopying {
-    func launch(_: ApplicationCandidate) throws {}
+    func launch(_: ApplicationCandidate, completion: @escaping ApplicationLaunchCompletion) throws { completion(.success(())) }
     func launch(_: SystemSettingsPane) throws {}
     func reveal(_: ApplicationCandidate) throws {}
     func open(_: FilenameCandidate) throws {}
