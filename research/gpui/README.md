@@ -1,6 +1,6 @@
 # GPUI feasibility and preliminary Cockpit baseline
 
-Status: **partial investigation; do not close the research ticket yet**. No production migration or ADR changes. Recommendation: retain the current stack while establishing an instrumented presentation baseline and testing native optimizations. GPUI is plausible, not demonstrated faster for Cockpit.
+Status: **evaluation concluded with human approval: retain the current stack and prioritize native fixes**. See [controlled Launcher trials and resolution](ui-findings.md) for the follow-up evidence, tested no-match candidate, FSEvents blocker, and explicit measurement gaps. No production migration or ADR changes. The remainder below preserves the initial checkpoint; its pending-work list is historical, not a claim that those measurements were completed.
 
 Origin: [research: evaluate GPUI for faster Launcher interactions](https://github.com/codybarr/cockpit/issues/30).
 

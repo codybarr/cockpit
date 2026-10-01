@@ -1,0 +1,1082 @@
+[
+  {
+    "trial": "baseline-1",
+    "phase": "first_cycle",
+    "operation": "invoke",
+    "n": 1,
+    "graph_ms": {
+      "median": 6.543625,
+      "p95": 6.543625,
+      "p99": 6.543625,
+      "max": 6.543625
+    },
+    "draw_proxy_ms": {
+      "median": 8.350666,
+      "p95": 8.350666,
+      "p99": 8.350666,
+      "max": 8.350666
+    }
+  },
+  {
+    "trial": "baseline-1",
+    "phase": "first_cycle",
+    "operation": "input",
+    "n": 24,
+    "dispatch_ms": {
+      "median": 0.700458,
+      "p95": 2.232,
+      "p99": 4.602333,
+      "max": 4.602333
+    },
+    "controller_ms": {
+      "median": 0.29868700000000004,
+      "p95": 51.5465,
+      "p99": 53.313167,
+      "max": 53.313167
+    },
+    "graph_ms": {
+      "median": 6.3309585,
+      "p95": 56.325166,
+      "p99": 57.388875,
+      "max": 57.388875
+    },
+    "draw_proxy_ms": {
+      "median": 7.392958,
+      "p95": 56.808208,
+      "p99": 57.8965,
+      "max": 57.8965
+    }
+  },
+  {
+    "trial": "baseline-1",
+    "phase": "first_cycle",
+    "operation": "selection",
+    "n": 20,
+    "dispatch_ms": {
+      "median": 0.16049999999999998,
+      "p95": 0.9475,
+      "p99": 1.167208,
+      "max": 1.167208
+    },
+    "controller_ms": {
+      "median": 0.033437,
+      "p95": 0.04475,
+      "p99": 0.083291,
+      "max": 0.083291
+    },
+    "graph_ms": {
+      "median": 3.1045835,
+      "p95": 4.238708,
+      "p99": 4.858542,
+      "max": 4.858542
+    },
+    "draw_proxy_ms": {
+      "median": 7.1850625,
+      "p95": 8.682333,
+      "p99": 9.357417,
+      "max": 9.357417
+    }
+  },
+  {
+    "trial": "baseline-1",
+    "phase": "first_cycle",
+    "operation": "empty",
+    "n": 1,
+    "dispatch_ms": {
+      "median": 0.117042,
+      "p95": 0.117042,
+      "p99": 0.117042,
+      "max": 0.117042
+    },
+    "controller_ms": {
+      "median": 0.031667,
+      "p95": 0.031667,
+      "p99": 0.031667,
+      "max": 0.031667
+    },
+    "graph_ms": {
+      "median": 1.593917,
+      "p95": 1.593917,
+      "p99": 1.593917,
+      "max": 1.593917
+    },
+    "draw_proxy_ms": {
+      "median": 3.577625,
+      "p95": 3.577625,
+      "p99": 3.577625,
+      "max": 3.577625
+    }
+  },
+  {
+    "trial": "baseline-1",
+    "phase": "warm",
+    "operation": "invoke",
+    "n": 55,
+    "graph_ms": {
+      "median": 4.596375,
+      "p95": 7.389917,
+      "p99": 9.973833,
+      "max": 9.973833
+    },
+    "draw_proxy_ms": {
+      "median": 5.670791,
+      "p95": 8.7775,
+      "p99": 10.697,
+      "max": 10.697
+    }
+  },
+  {
+    "trial": "baseline-1",
+    "phase": "warm",
+    "operation": "input",
+    "n": 1320,
+    "dispatch_ms": {
+      "median": 0.1932085,
+      "p95": 5.114583,
+      "p99": 8.313125,
+      "max": 11.596125
+    },
+    "controller_ms": {
+      "median": 0.2734375,
+      "p95": 52.758584,
+      "p99": 54.700583,
+      "max": 57.145541
+    },
+    "graph_ms": {
+      "median": 6.2170000000000005,
+      "p95": 56.4555,
+      "p99": 58.979625,
+      "max": 64.923375
+    },
+    "draw_proxy_ms": {
+      "median": 7.9272290000000005,
+      "p95": 56.98425,
+      "p99": 59.546583,
+      "max": 65.623042
+    }
+  },
+  {
+    "trial": "baseline-1",
+    "phase": "warm",
+    "operation": "selection",
+    "n": 1100,
+    "dispatch_ms": {
+      "median": 0.1675415,
+      "p95": 1.925417,
+      "p99": 5.760334,
+      "max": 8.146084
+    },
+    "controller_ms": {
+      "median": 0.035875,
+      "p95": 0.058791,
+      "p99": 0.072334,
+      "max": 0.117667
+    },
+    "graph_ms": {
+      "median": 2.977354,
+      "p95": 4.895833,
+      "p99": 9.759542,
+      "max": 11.64225
+    },
+    "draw_proxy_ms": {
+      "median": 6.907,
+      "p95": 9.35,
+      "p99": 13.154042,
+      "max": 16.014792
+    }
+  },
+  {
+    "trial": "baseline-1",
+    "phase": "warm",
+    "operation": "empty",
+    "n": 55,
+    "dispatch_ms": {
+      "median": 0.149458,
+      "p95": 1.774708,
+      "p99": 1.989625,
+      "max": 1.989625
+    },
+    "controller_ms": {
+      "median": 0.037542,
+      "p95": 0.0505,
+      "p99": 0.083666,
+      "max": 0.083666
+    },
+    "graph_ms": {
+      "median": 2.061375,
+      "p95": 5.7465,
+      "p99": 10.871375,
+      "max": 10.871375
+    },
+    "draw_proxy_ms": {
+      "median": 4.210041,
+      "p95": 9.722625,
+      "p99": 12.808875,
+      "max": 12.808875
+    }
+  },
+  {
+    "trial": "cached-1",
+    "phase": "first_cycle",
+    "operation": "invoke",
+    "n": 1,
+    "graph_ms": {
+      "median": 6.867167,
+      "p95": 6.867167,
+      "p99": 6.867167,
+      "max": 6.867167
+    },
+    "draw_proxy_ms": {
+      "median": 7.949042,
+      "p95": 7.949042,
+      "p99": 7.949042,
+      "max": 7.949042
+    }
+  },
+  {
+    "trial": "cached-1",
+    "phase": "first_cycle",
+    "operation": "input",
+    "n": 24,
+    "dispatch_ms": {
+      "median": 0.192917,
+      "p95": 3.663584,
+      "p99": 10.470667,
+      "max": 10.470667
+    },
+    "controller_ms": {
+      "median": 0.3017085,
+      "p95": 53.254208,
+      "p99": 53.585292,
+      "max": 53.585292
+    },
+    "graph_ms": {
+      "median": 6.2989375,
+      "p95": 55.043292,
+      "p99": 57.6175,
+      "max": 57.6175
+    },
+    "draw_proxy_ms": {
+      "median": 7.5213125000000005,
+      "p95": 55.642834,
+      "p99": 58.177291,
+      "max": 58.177291
+    }
+  },
+  {
+    "trial": "cached-1",
+    "phase": "first_cycle",
+    "operation": "selection",
+    "n": 20,
+    "dispatch_ms": {
+      "median": 0.3562295,
+      "p95": 1.4315,
+      "p99": 1.481458,
+      "max": 1.481458
+    },
+    "controller_ms": {
+      "median": 0.0371875,
+      "p95": 0.062667,
+      "p99": 0.076958,
+      "max": 0.076958
+    },
+    "graph_ms": {
+      "median": 2.3684585,
+      "p95": 3.582208,
+      "p99": 3.954125,
+      "max": 3.954125
+    },
+    "draw_proxy_ms": {
+      "median": 5.788208,
+      "p95": 7.483083,
+      "p99": 7.996667,
+      "max": 7.996667
+    }
+  },
+  {
+    "trial": "cached-1",
+    "phase": "first_cycle",
+    "operation": "empty",
+    "n": 1,
+    "dispatch_ms": {
+      "median": 0.157958,
+      "p95": 0.157958,
+      "p99": 0.157958,
+      "max": 0.157958
+    },
+    "controller_ms": {
+      "median": 0.042708,
+      "p95": 0.042708,
+      "p99": 0.042708,
+      "max": 0.042708
+    },
+    "graph_ms": {
+      "median": 2.194,
+      "p95": 2.194,
+      "p99": 2.194,
+      "max": 2.194
+    },
+    "draw_proxy_ms": {
+      "median": 4.471875,
+      "p95": 4.471875,
+      "p99": 4.471875,
+      "max": 4.471875
+    }
+  },
+  {
+    "trial": "cached-1",
+    "phase": "warm",
+    "operation": "invoke",
+    "n": 55,
+    "graph_ms": {
+      "median": 4.771167,
+      "p95": 8.973958,
+      "p99": 11.979708,
+      "max": 11.979708
+    },
+    "draw_proxy_ms": {
+      "median": 5.943459,
+      "p95": 9.80775,
+      "p99": 12.646,
+      "max": 12.646
+    }
+  },
+  {
+    "trial": "cached-1",
+    "phase": "warm",
+    "operation": "input",
+    "n": 1320,
+    "dispatch_ms": {
+      "median": 0.359313,
+      "p95": 3.837459,
+      "p99": 8.284,
+      "max": 8.457208
+    },
+    "controller_ms": {
+      "median": 0.27722899999999995,
+      "p95": 53.156375,
+      "p99": 54.9265,
+      "max": 56.379708
+    },
+    "graph_ms": {
+      "median": 6.3141045,
+      "p95": 57.396917,
+      "p99": 59.623083,
+      "max": 61.877458
+    },
+    "draw_proxy_ms": {
+      "median": 7.7190625,
+      "p95": 57.958167,
+      "p99": 60.255333,
+      "max": 62.559458
+    }
+  },
+  {
+    "trial": "cached-1",
+    "phase": "warm",
+    "operation": "selection",
+    "n": 1100,
+    "dispatch_ms": {
+      "median": 0.2606045,
+      "p95": 1.63825,
+      "p99": 2.09225,
+      "max": 6.503333
+    },
+    "controller_ms": {
+      "median": 0.038583,
+      "p95": 0.065333,
+      "p99": 0.078208,
+      "max": 0.094
+    },
+    "graph_ms": {
+      "median": 2.3313955,
+      "p95": 3.457084,
+      "p99": 4.093416,
+      "max": 8.884208
+    },
+    "draw_proxy_ms": {
+      "median": 5.821437,
+      "p95": 7.30375,
+      "p99": 7.977958,
+      "max": 12.720083
+    }
+  },
+  {
+    "trial": "cached-1",
+    "phase": "warm",
+    "operation": "empty",
+    "n": 55,
+    "dispatch_ms": {
+      "median": 0.1525,
+      "p95": 0.928083,
+      "p99": 1.824709,
+      "max": 1.824709
+    },
+    "controller_ms": {
+      "median": 0.037542,
+      "p95": 0.056333,
+      "p99": 0.059542,
+      "max": 0.059542
+    },
+    "graph_ms": {
+      "median": 2.922292,
+      "p95": 7.0265,
+      "p99": 8.071917,
+      "max": 8.071917
+    },
+    "draw_proxy_ms": {
+      "median": 5.295875,
+      "p95": 9.239334,
+      "p99": 10.431458,
+      "max": 10.431458
+    }
+  },
+  {
+    "trial": "cached-2",
+    "phase": "first_cycle",
+    "operation": "invoke",
+    "n": 1,
+    "graph_ms": {
+      "median": 5.31225,
+      "p95": 5.31225,
+      "p99": 5.31225,
+      "max": 5.31225
+    },
+    "draw_proxy_ms": {
+      "median": 6.339584,
+      "p95": 6.339584,
+      "p99": 6.339584,
+      "max": 6.339584
+    }
+  },
+  {
+    "trial": "cached-2",
+    "phase": "first_cycle",
+    "operation": "input",
+    "n": 24,
+    "dispatch_ms": {
+      "median": 0.428729,
+      "p95": 1.907625,
+      "p99": 4.408334,
+      "max": 4.408334
+    },
+    "controller_ms": {
+      "median": 0.3204165,
+      "p95": 52.372625,
+      "p99": 53.047666,
+      "max": 53.047666
+    },
+    "graph_ms": {
+      "median": 6.7443124999999995,
+      "p95": 57.4555,
+      "p99": 59.800375,
+      "max": 59.800375
+    },
+    "draw_proxy_ms": {
+      "median": 8.5297295,
+      "p95": 58.0165,
+      "p99": 60.466833,
+      "max": 60.466833
+    }
+  },
+  {
+    "trial": "cached-2",
+    "phase": "first_cycle",
+    "operation": "selection",
+    "n": 20,
+    "dispatch_ms": {
+      "median": 0.2008125,
+      "p95": 1.847375,
+      "p99": 7.105875,
+      "max": 7.105875
+    },
+    "controller_ms": {
+      "median": 0.0357295,
+      "p95": 0.056375,
+      "p99": 0.079458,
+      "max": 0.079458
+    },
+    "graph_ms": {
+      "median": 2.3579375000000002,
+      "p95": 3.605708,
+      "p99": 9.490291,
+      "max": 9.490291
+    },
+    "draw_proxy_ms": {
+      "median": 6.0335205,
+      "p95": 7.498833,
+      "p99": 13.953625,
+      "max": 13.953625
+    }
+  },
+  {
+    "trial": "cached-2",
+    "phase": "first_cycle",
+    "operation": "empty",
+    "n": 1,
+    "dispatch_ms": {
+      "median": 0.160916,
+      "p95": 0.160916,
+      "p99": 0.160916,
+      "max": 0.160916
+    },
+    "controller_ms": {
+      "median": 0.03625,
+      "p95": 0.03625,
+      "p99": 0.03625,
+      "max": 0.03625
+    },
+    "graph_ms": {
+      "median": 3.034708,
+      "p95": 3.034708,
+      "p99": 3.034708,
+      "max": 3.034708
+    },
+    "draw_proxy_ms": {
+      "median": 5.266375,
+      "p95": 5.266375,
+      "p99": 5.266375,
+      "max": 5.266375
+    }
+  },
+  {
+    "trial": "cached-2",
+    "phase": "warm",
+    "operation": "invoke",
+    "n": 55,
+    "graph_ms": {
+      "median": 4.782791,
+      "p95": 8.879416,
+      "p99": 13.770333,
+      "max": 13.770333
+    },
+    "draw_proxy_ms": {
+      "median": 5.924875,
+      "p95": 9.541541,
+      "p99": 14.54625,
+      "max": 14.54625
+    }
+  },
+  {
+    "trial": "cached-2",
+    "phase": "warm",
+    "operation": "input",
+    "n": 1320,
+    "dispatch_ms": {
+      "median": 0.18577100000000002,
+      "p95": 3.702542,
+      "p99": 8.110375,
+      "max": 9.139792
+    },
+    "controller_ms": {
+      "median": 0.321125,
+      "p95": 53.578542,
+      "p99": 54.915708,
+      "max": 57.712541
+    },
+    "graph_ms": {
+      "median": 5.675896,
+      "p95": 56.434458,
+      "p99": 58.463667,
+      "max": 59.987417
+    },
+    "draw_proxy_ms": {
+      "median": 7.1787915,
+      "p95": 57.111125,
+      "p99": 59.221417,
+      "max": 60.764792
+    }
+  },
+  {
+    "trial": "cached-2",
+    "phase": "warm",
+    "operation": "selection",
+    "n": 1100,
+    "dispatch_ms": {
+      "median": 0.206104,
+      "p95": 1.591916,
+      "p99": 2.039417,
+      "max": 4.831833
+    },
+    "controller_ms": {
+      "median": 0.039958,
+      "p95": 0.06,
+      "p99": 0.074083,
+      "max": 0.093542
+    },
+    "graph_ms": {
+      "median": 2.3191455,
+      "p95": 3.421167,
+      "p99": 4.190958,
+      "max": 6.476875
+    },
+    "draw_proxy_ms": {
+      "median": 5.930104,
+      "p95": 7.366083,
+      "p99": 8.057541,
+      "max": 9.330667
+    }
+  },
+  {
+    "trial": "cached-2",
+    "phase": "warm",
+    "operation": "empty",
+    "n": 55,
+    "dispatch_ms": {
+      "median": 0.147208,
+      "p95": 1.591916,
+      "p99": 7.030625,
+      "max": 7.030625
+    },
+    "controller_ms": {
+      "median": 0.037292,
+      "p95": 0.068167,
+      "p99": 0.090083,
+      "max": 0.090083
+    },
+    "graph_ms": {
+      "median": 2.117,
+      "p95": 6.202458,
+      "p99": 11.246334,
+      "max": 11.246334
+    },
+    "draw_proxy_ms": {
+      "median": 4.416042,
+      "p95": 8.172708,
+      "p99": 13.469959,
+      "max": 13.469959
+    }
+  },
+  {
+    "trial": "baseline-2",
+    "phase": "first_cycle",
+    "operation": "invoke",
+    "n": 1,
+    "graph_ms": {
+      "median": 6.423667,
+      "p95": 6.423667,
+      "p99": 6.423667,
+      "max": 6.423667
+    },
+    "draw_proxy_ms": {
+      "median": 7.873167,
+      "p95": 7.873167,
+      "p99": 7.873167,
+      "max": 7.873167
+    }
+  },
+  {
+    "trial": "baseline-2",
+    "phase": "first_cycle",
+    "operation": "input",
+    "n": 24,
+    "dispatch_ms": {
+      "median": 0.201896,
+      "p95": 2.470042,
+      "p99": 10.288458,
+      "max": 10.288458
+    },
+    "controller_ms": {
+      "median": 0.2894375,
+      "p95": 52.251292,
+      "p99": 52.423208,
+      "max": 52.423208
+    },
+    "graph_ms": {
+      "median": 5.3386465,
+      "p95": 53.788375,
+      "p99": 54.401458,
+      "max": 54.401458
+    },
+    "draw_proxy_ms": {
+      "median": 7.0289795,
+      "p95": 54.398,
+      "p99": 55.004792,
+      "max": 55.004792
+    }
+  },
+  {
+    "trial": "baseline-2",
+    "phase": "first_cycle",
+    "operation": "selection",
+    "n": 20,
+    "dispatch_ms": {
+      "median": 0.19674999999999998,
+      "p95": 2.008333,
+      "p99": 4.8375,
+      "max": 4.8375
+    },
+    "controller_ms": {
+      "median": 0.043312,
+      "p95": 0.059125,
+      "p99": 0.062791,
+      "max": 0.062791
+    },
+    "graph_ms": {
+      "median": 2.9522505,
+      "p95": 5.605875,
+      "p99": 8.47325,
+      "max": 8.47325
+    },
+    "draw_proxy_ms": {
+      "median": 7.223396,
+      "p95": 9.764541,
+      "p99": 12.930167,
+      "max": 12.930167
+    }
+  },
+  {
+    "trial": "baseline-2",
+    "phase": "first_cycle",
+    "operation": "empty",
+    "n": 1,
+    "dispatch_ms": {
+      "median": 0.10975,
+      "p95": 0.10975,
+      "p99": 0.10975,
+      "max": 0.10975
+    },
+    "controller_ms": {
+      "median": 0.039167,
+      "p95": 0.039167,
+      "p99": 0.039167,
+      "max": 0.039167
+    },
+    "graph_ms": {
+      "median": 1.825083,
+      "p95": 1.825083,
+      "p99": 1.825083,
+      "max": 1.825083
+    },
+    "draw_proxy_ms": {
+      "median": 3.814083,
+      "p95": 3.814083,
+      "p99": 3.814083,
+      "max": 3.814083
+    }
+  },
+  {
+    "trial": "baseline-2",
+    "phase": "warm",
+    "operation": "invoke",
+    "n": 55,
+    "graph_ms": {
+      "median": 4.360375,
+      "p95": 7.942958,
+      "p99": 9.060666,
+      "max": 9.060666
+    },
+    "draw_proxy_ms": {
+      "median": 5.394917,
+      "p95": 8.762542,
+      "p99": 9.710958,
+      "max": 9.710958
+    }
+  },
+  {
+    "trial": "baseline-2",
+    "phase": "warm",
+    "operation": "input",
+    "n": 1320,
+    "dispatch_ms": {
+      "median": 0.1591255,
+      "p95": 3.456,
+      "p99": 7.882375,
+      "max": 9.900083
+    },
+    "controller_ms": {
+      "median": 0.2678125,
+      "p95": 53.54025,
+      "p99": 55.294458,
+      "max": 57.170542
+    },
+    "graph_ms": {
+      "median": 5.478,
+      "p95": 56.587833,
+      "p99": 58.355958,
+      "max": 60.447833
+    },
+    "draw_proxy_ms": {
+      "median": 7.5399995,
+      "p95": 57.161042,
+      "p99": 58.994292,
+      "max": 61.039083
+    }
+  },
+  {
+    "trial": "baseline-2",
+    "phase": "warm",
+    "operation": "selection",
+    "n": 1100,
+    "dispatch_ms": {
+      "median": 0.1684585,
+      "p95": 1.85525,
+      "p99": 3.318958,
+      "max": 7.632125
+    },
+    "controller_ms": {
+      "median": 0.037958,
+      "p95": 0.056958,
+      "p99": 0.068792,
+      "max": 0.100959
+    },
+    "graph_ms": {
+      "median": 3.0381875000000003,
+      "p95": 5.048709,
+      "p99": 6.6485,
+      "max": 11.845542
+    },
+    "draw_proxy_ms": {
+      "median": 7.085896,
+      "p95": 9.391167,
+      "p99": 10.877375,
+      "max": 16.681334
+    }
+  },
+  {
+    "trial": "baseline-2",
+    "phase": "warm",
+    "operation": "empty",
+    "n": 55,
+    "dispatch_ms": {
+      "median": 0.139083,
+      "p95": 1.808459,
+      "p99": 2.005041,
+      "max": 2.005041
+    },
+    "controller_ms": {
+      "median": 0.035167,
+      "p95": 0.046083,
+      "p99": 0.0495,
+      "max": 0.0495
+    },
+    "graph_ms": {
+      "median": 2.289334,
+      "p95": 5.973,
+      "p99": 9.222208,
+      "max": 9.222208
+    },
+    "draw_proxy_ms": {
+      "median": 4.349583,
+      "p95": 8.292917,
+      "p99": 11.136416,
+      "max": 11.136416
+    }
+  },
+  {
+    "trial": "baseline-3",
+    "phase": "first_cycle",
+    "operation": "invoke",
+    "n": 1,
+    "graph_ms": {
+      "median": 6.247083,
+      "p95": 6.247083,
+      "p99": 6.247083,
+      "max": 6.247083
+    },
+    "draw_proxy_ms": {
+      "median": 8.857,
+      "p95": 8.857,
+      "p99": 8.857,
+      "max": 8.857
+    }
+  },
+  {
+    "trial": "baseline-3",
+    "phase": "first_cycle",
+    "operation": "input",
+    "n": 24,
+    "dispatch_ms": {
+      "median": 0.1710625,
+      "p95": 4.268041,
+      "p99": 4.499459,
+      "max": 4.499459
+    },
+    "controller_ms": {
+      "median": 0.30820800000000004,
+      "p95": 52.569625,
+      "p99": 53.860667,
+      "max": 53.860667
+    },
+    "graph_ms": {
+      "median": 6.0437085,
+      "p95": 55.123458,
+      "p99": 55.895125,
+      "max": 55.895125
+    },
+    "draw_proxy_ms": {
+      "median": 7.6748955,
+      "p95": 55.642417,
+      "p99": 56.514833,
+      "max": 56.514833
+    }
+  },
+  {
+    "trial": "baseline-3",
+    "phase": "first_cycle",
+    "operation": "selection",
+    "n": 20,
+    "dispatch_ms": {
+      "median": 0.19010349999999998,
+      "p95": 1.7195,
+      "p99": 3.896833,
+      "max": 3.896833
+    },
+    "controller_ms": {
+      "median": 0.040958499999999995,
+      "p95": 0.050792,
+      "p99": 0.051917,
+      "max": 0.051917
+    },
+    "graph_ms": {
+      "median": 3.0691249999999997,
+      "p95": 4.635791,
+      "p99": 7.430083,
+      "max": 7.430083
+    },
+    "draw_proxy_ms": {
+      "median": 7.3695205,
+      "p95": 8.702958,
+      "p99": 11.883042,
+      "max": 11.883042
+    }
+  },
+  {
+    "trial": "baseline-3",
+    "phase": "first_cycle",
+    "operation": "empty",
+    "n": 1,
+    "dispatch_ms": {
+      "median": 1.656542,
+      "p95": 1.656542,
+      "p99": 1.656542,
+      "max": 1.656542
+    },
+    "controller_ms": {
+      "median": 0.034625,
+      "p95": 0.034625,
+      "p99": 0.034625,
+      "max": 0.034625
+    },
+    "graph_ms": {
+      "median": 3.255917,
+      "p95": 3.255917,
+      "p99": 3.255917,
+      "max": 3.255917
+    },
+    "draw_proxy_ms": {
+      "median": 5.16275,
+      "p95": 5.16275,
+      "p99": 5.16275,
+      "max": 5.16275
+    }
+  },
+  {
+    "trial": "baseline-3",
+    "phase": "warm",
+    "operation": "invoke",
+    "n": 55,
+    "graph_ms": {
+      "median": 4.244708,
+      "p95": 7.231041,
+      "p99": 10.33625,
+      "max": 10.33625
+    },
+    "draw_proxy_ms": {
+      "median": 5.605,
+      "p95": 10.840542,
+      "p99": 19.692333,
+      "max": 19.692333
+    }
+  },
+  {
+    "trial": "baseline-3",
+    "phase": "warm",
+    "operation": "input",
+    "n": 1320,
+    "dispatch_ms": {
+      "median": 0.166875,
+      "p95": 2.546167,
+      "p99": 7.569375,
+      "max": 10.073416
+    },
+    "controller_ms": {
+      "median": 0.250896,
+      "p95": 53.767167,
+      "p99": 55.73225,
+      "max": 57.408166
+    },
+    "graph_ms": {
+      "median": 5.2111875,
+      "p95": 56.586042,
+      "p99": 58.5235,
+      "max": 62.91725
+    },
+    "draw_proxy_ms": {
+      "median": 7.2589795,
+      "p95": 57.198709,
+      "p99": 59.203208,
+      "max": 63.690542
+    }
+  },
+  {
+    "trial": "baseline-3",
+    "phase": "warm",
+    "operation": "selection",
+    "n": 1100,
+    "dispatch_ms": {
+      "median": 0.1760415,
+      "p95": 1.861292,
+      "p99": 2.1925,
+      "max": 7.897041
+    },
+    "controller_ms": {
+      "median": 0.037791,
+      "p95": 0.05775,
+      "p99": 0.068167,
+      "max": 0.11275
+    },
+    "graph_ms": {
+      "median": 3.0904375,
+      "p95": 5.041167,
+      "p99": 5.875666,
+      "max": 10.528833
+    },
+    "draw_proxy_ms": {
+      "median": 7.223625,
+      "p95": 9.335167,
+      "p99": 10.402625,
+      "max": 14.452666
+    }
+  },
+  {
+    "trial": "baseline-3",
+    "phase": "warm",
+    "operation": "empty",
+    "n": 55,
+    "dispatch_ms": {
+      "median": 0.14,
+      "p95": 1.741458,
+      "p99": 7.41775,
+      "max": 7.41775
+    },
+    "controller_ms": {
+      "median": 0.036791,
+      "p95": 0.044291,
+      "p99": 0.047416,
+      "max": 0.047416
+    },
+    "graph_ms": {
+      "median": 2.419833,
+      "p95": 5.816375,
+      "p99": 9.25675,
+      "max": 9.25675
+    },
+    "draw_proxy_ms": {
+      "median": 4.4275,
+      "p95": 7.831459,
+      "p99": 11.399416,
+      "max": 11.399416
+    }
+  }
+]

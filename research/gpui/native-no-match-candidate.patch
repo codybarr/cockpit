@@ -1,0 +1,74 @@
+diff --git a/Sources/Cockpit/FilenameIndex.swift b/Sources/Cockpit/FilenameIndex.swift
+index a3df9b7..d80dd10 100644
+--- a/Sources/Cockpit/FilenameIndex.swift
++++ b/Sources/Cockpit/FilenameIndex.swift
+@@ -55,6 +55,12 @@ struct FilenameSearchSnapshot {
+         guard let candidatePositions = Self.trigrams(in: normalizedQuery)
+             .compactMap({ positionsByTrigram[$0] })
+             .min(by: { $0.count < $1.count }) else {
++            // Research candidate: an ASCII substring of at least three bytes
++            // must have an indexed byte trigram. Preserve canonical-equivalent
++            // Unicode fallback behavior and the existing short-query path.
++            if normalizedQuery.utf8.count >= 3, normalizedQuery.utf8.allSatisfy({ $0 < 128 }) {
++                return []
++            }
+             return Array(candidates.lazy
+                 .filter { $0.normalizedName.contains(normalizedQuery) }
+                 .prefix(Self.maximumMatches))
+diff --git a/Tests/CockpitTests/FilenameIndexTests.swift b/Tests/CockpitTests/FilenameIndexTests.swift
+index 2689fc3..0df16f2 100644
+--- a/Tests/CockpitTests/FilenameIndexTests.swift
++++ b/Tests/CockpitTests/FilenameIndexTests.swift
+@@ -43,6 +43,25 @@ final class FilenameIndexTests: XCTestCase {
+         wait(for: [refreshed], timeout: 3)
+     }
+ 
++    func testAbsentASCIITrigramsAndShortQueriesMatchBruteForce() {
++        let files = ["Quarterly Report.pdf", "Cafe\u{301}.txt", "ab.txt", "zz-top.txt"].map {
++            FilenameCandidate(url: URL(fileURLWithPath: "/fixture/\($0)"))
++        }
++        let snapshot = FilenameSearchSnapshot(files)
++        for query in ["zzz", "nomatch", "ab", "", "report", "cafe", "zz-", "q", "qqq", "abcxyz"] {
++            let normalized = SearchNormalizer.normalize(query)
++            XCTAssertEqual(snapshot.matches(for: normalized), Array(files.filter { $0.normalizedName.contains(normalized) }.prefix(100)), query)
++        }
++    }
++
++    func testUnicodeCanonicalEquivalentFallbackIsPreserved() {
++        let files = [FilenameCandidate(url: URL(fileURLWithPath: "/fixture/각각각"))]
++        let decomposed = "\u{1100}\u{1161}\u{11A8}\u{1100}\u{1161}\u{11A8}\u{1100}\u{1161}\u{11A8}"
++        let normalized = SearchNormalizer.normalize(decomposed)
++        XCTAssertTrue(files[0].normalizedName.contains(normalized))
++        XCTAssertEqual(FilenameSearchSnapshot(files).matches(for: normalized), files)
++    }
++
+     private func makeTemporaryDirectory() throws -> URL {
+         let directory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+             .appending(path: ".build/CockpitTests-\(UUID().uuidString)", directoryHint: .isDirectory)
+diff --git a/Tests/CockpitTests/PerformanceBenchmarks.swift b/Tests/CockpitTests/PerformanceBenchmarks.swift
+index f187c90..0b6bdf3 100644
+--- a/Tests/CockpitTests/PerformanceBenchmarks.swift
++++ b/Tests/CockpitTests/PerformanceBenchmarks.swift
+@@ -39,6 +39,22 @@ final class PerformanceBenchmarks: XCTestCase {
+         XCTAssertLessThanOrEqual(hotkeyP99, 0.050, "Hotkey-to-ready p99 must be at most 50 ms.")
+     }
+ 
++    func testNoMatchFilenameQueriesMeetControllerBudget() throws {
++        guard ProcessInfo.processInfo.environment["COCKPIT_RUN_BENCHMARKS"] == "1" else {
++            throw XCTSkip("Opt-in research performance regression test.")
++        }
++        let files = (0..<50_000).map { index in
++            FilenameCandidate(url: URL(fileURLWithPath: "/fixture/Quarterly Report \(index).pdf"))
++        }
++        let controller = makeController(filenameIndex: FixtureFilenameIndex(files: files))
++        controller.updateQuery("'zzznomatch")
++        let timings = samples(count: 100) { controller.updateQuery("'zzznomatch") }
++        let p95 = percentile(timings, 0.95)
++        print("RESEARCH_NO_MATCH_P95_MS=\(p95 * 1_000)")
++        XCTAssertTrue(controller.state.results.isEmpty)
++        XCTAssertLessThanOrEqual(p95, 0.016, "No-match controller work alone must fit ADR-0004's query budget.")
++    }
++
+     private func makeController(filenameIndex: any FilenameIndexing) -> LauncherController {
+         LauncherController(
+             catalog: EmptyCatalog(),

@@ -1,0 +1,28 @@
+[0/1] Planning build
+Building for production...
+[0/5] Write sources
+[2/5] Write swift-version--58304C5D6DBC2206.txt
+[4/6] Compiling Cockpit ApplicationCatalog.swift
+[4/8] Write Objects.LinkFileList
+[5/8] Linking Cockpit
+[7/9] Compiling CockpitTests ApplicationCatalogCacheTests.swift
+[8/10] Compiling CockpitPackageTests runner.swift
+[8/10] Write Objects.LinkFileList
+[9/10] Linking CockpitPackageTests
+Build complete! (8.48s)
+Test Suite 'Selected tests' started at 2026-09-30 22:57:42.146.
+Test Suite 'CockpitPackageTests.xctest' started at 2026-09-30 22:57:42.146.
+Test Suite 'FilenameIndexTests' started at 2026-09-30 22:57:42.146.
+Test Case '-[CockpitTests.FilenameIndexTests testRefreshesAfterFilesystemEvents]' started.
+/private/tmp/cockpit-gpui-research/Tests/CockpitTests/FilenameIndexTests.swift:43: error: -[CockpitTests.FilenameIndexTests testRefreshesAfterFilesystemEvents] : Asynchronous wait failed: Exceeded timeout of 3 seconds, with unfulfilled expectations: "filename index receives the filesystem event".
+Test Case '-[CockpitTests.FilenameIndexTests testRefreshesAfterFilesystemEvents]' failed (3.072 seconds).
+Test Suite 'FilenameIndexTests' failed at 2026-09-30 22:57:45.218.
+	 Executed 1 test, with 1 failure (0 unexpected) in 3.072 (3.072) seconds
+Test Suite 'CockpitPackageTests.xctest' failed at 2026-09-30 22:57:45.218.
+	 Executed 1 test, with 1 failure (0 unexpected) in 3.072 (3.072) seconds
+Test Suite 'Selected tests' failed at 2026-09-30 22:57:45.218.
+	 Executed 1 test, with 1 failure (0 unexpected) in 3.072 (3.073) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1501
+􀄵  Target Platform: arm64e-apple-macos14.0
+􁁛  Test run with 0 tests in 0 suites passed after 0.001 seconds.

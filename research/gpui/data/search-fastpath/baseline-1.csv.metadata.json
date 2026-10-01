@@ -1,0 +1,12 @@
+{
+  "background_indexing" : false,
+  "cache_icons" : false,
+  "display_nominal_hz" : 120,
+  "display_pixel_height" : 1964,
+  "display_pixel_width" : 3024,
+  "endpoint" : "matching-state NSView draw callback; not screen presentation",
+  "initial_index_files" : 50000,
+  "main_to_fixture_ready_ms" : 1293.8711249999999,
+  "os" : "Version 27.0 (Build 26A428)",
+  "thermal_state" : 0
+}

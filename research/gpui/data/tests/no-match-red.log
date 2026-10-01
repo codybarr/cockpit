@@ -1,0 +1,29 @@
+[0/1] Planning build
+Building for production...
+[0/5] Write sources
+[1/5] Write swift-version--58304C5D6DBC2206.txt
+[3/6] Compiling Cockpit ApplicationCatalog.swift
+[3/7] Write Objects.LinkFileList
+[4/7] Linking Cockpit
+[6/8] Compiling CockpitTests ApplicationCatalogCacheTests.swift
+[7/9] Compiling CockpitPackageTests runner.swift
+[7/9] Write Objects.LinkFileList
+[8/9] Linking CockpitPackageTests
+Build complete! (8.87s)
+Test Suite 'Selected tests' started at 2026-09-30 22:51:24.570.
+Test Suite 'CockpitPackageTests.xctest' started at 2026-09-30 22:51:24.572.
+Test Suite 'PerformanceBenchmarks' started at 2026-09-30 22:51:24.572.
+Test Case '-[CockpitTests.PerformanceBenchmarks testNoMatchFilenameQueriesMeetControllerBudget]' started.
+/private/tmp/cockpit-gpui-research/Tests/CockpitTests/PerformanceBenchmarks.swift:55: error: -[CockpitTests.PerformanceBenchmarks testNoMatchFilenameQueriesMeetControllerBudget] : XCTAssertLessThanOrEqual failed: ("0.05621525") is greater than ("0.016") - No-match controller work alone must fit ADR-0004's query budget.
+Test Case '-[CockpitTests.PerformanceBenchmarks testNoMatchFilenameQueriesMeetControllerBudget]' failed (5.634 seconds).
+Test Suite 'PerformanceBenchmarks' failed at 2026-09-30 22:51:30.206.
+	 Executed 1 test, with 1 failure (0 unexpected) in 5.634 (5.634) seconds
+Test Suite 'CockpitPackageTests.xctest' failed at 2026-09-30 22:51:30.206.
+	 Executed 1 test, with 1 failure (0 unexpected) in 5.634 (5.634) seconds
+Test Suite 'Selected tests' failed at 2026-09-30 22:51:30.206.
+	 Executed 1 test, with 1 failure (0 unexpected) in 5.634 (5.636) seconds
+RESEARCH_NO_MATCH_P95_MS=56.215250000000005
+􀟈  Test run started.
+􀄵  Testing Library Version: 1501
+􀄵  Target Platform: arm64e-apple-macos14.0
+􁁛  Test run with 0 tests in 0 suites passed after 0.001 seconds.

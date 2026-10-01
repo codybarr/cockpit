@@ -1,0 +1,106 @@
+diff --git a/Sources/Cockpit/CockpitApp.swift b/Sources/Cockpit/CockpitApp.swift
+index 50f713a..71a541e 100644
+--- a/Sources/Cockpit/CockpitApp.swift
++++ b/Sources/Cockpit/CockpitApp.swift
+@@ -40,6 +40,10 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
+     }
+ 
+     static func main() {
++        if LauncherBenchmark.enabled {
++            LauncherBenchmark.run()
++            return
++        }
+         let application = NSApplication.shared
+         let delegate = CockpitApp()
+         application.delegate = delegate
+@@ -186,9 +190,9 @@ final class PasteboardCalculationCopier: CalculationCopying {
+ }
+ 
+ @MainActor
+-private final class LauncherPanelController {
++final class LauncherPanelController {
+     private let controller: LauncherController
+-    private let panel: LauncherPanel
++    let panel: LauncherPanel
+     private let showSettings: () -> Void
+     private var stateObserver: Any?
+     private var pendingResize: DispatchWorkItem?
+@@ -250,7 +254,7 @@ private final class LauncherPanelController {
+         if !controller.state.isVisible { panel.orderOut(nil) }
+     }
+ 
+-    fileprivate func hide() {
++    func hide() {
+         controller.dismiss()
+         panel.orderOut(nil)
+     }
+@@ -312,13 +316,16 @@ struct LauncherKeypress {
+     }
+ }
+ 
+-private final class LauncherPanel: NSPanel {
++final class LauncherPanel: NSPanel {
+     weak var controller: LauncherPanelController?
+ 
+     override var canBecomeKey: Bool { true }
+     override var canBecomeMain: Bool { false }
+ 
+     override func sendEvent(_ event: NSEvent) {
++        if event.type == .keyDown, let probe = LauncherBenchmark.probe {
++            probe.dispatched = LauncherBenchmark.now()
++        }
+         if event.type == .flagsChanged {
+             controller?.setRevealHintVisible(event.modifierFlags.contains(.command))
+             return
+@@ -443,6 +450,11 @@ private struct LauncherView: View {
+         }
+         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+         .background(Color(red: 0.10, green: 0.11, blue: 0.12))
++        .background {
++            if LauncherBenchmark.enabled {
++                BenchmarkDrawMarker(state: LauncherBenchmark.VisualState(controller.state))
++            }
++        }
+         .onAppear { isQueryFocused = true }
+     }
+ }
+@@ -482,7 +494,7 @@ private struct LauncherResultRow: View {
+     private var resultIcon: some View {
+         switch result {
+         case let .application(application):
+-            Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
++            Image(nsImage: LauncherBenchmark.icon(for: application.url.path))
+                 .resizable()
+         case let .systemSettingsPane(pane):
+             ZStack {
+@@ -500,7 +512,7 @@ private struct LauncherResultRow: View {
+                 }
+             }
+         case let .file(file):
+-            Image(nsImage: NSWorkspace.shared.icon(forFile: file.url.path))
++            Image(nsImage: LauncherBenchmark.icon(for: file.url.path))
+                 .resizable()
+         case let .systemAction(action):
+             Image(systemName: action.symbolName)
+diff --git a/Sources/Cockpit/LauncherController.swift b/Sources/Cockpit/LauncherController.swift
+index c9eb599..7238465 100644
+--- a/Sources/Cockpit/LauncherController.swift
++++ b/Sources/Cockpit/LauncherController.swift
+@@ -157,6 +157,8 @@ final class LauncherController: ObservableObject {
+     }
+ 
+     func updateQuery(_ query: String) {
++        LauncherBenchmark.probe?.controllerStart = LauncherBenchmark.now()
++        defer { LauncherBenchmark.observedController(state) }
+         // A leading space begins filename search only when the Launchpad is
+         // empty. Replacing a selected query is handled by LauncherPanel before
+         // SwiftUI updates this binding, so a literal space remains literal here.
+@@ -207,6 +209,8 @@ final class LauncherController: ObservableObject {
+     }
+ 
+     func moveSelection(by offset: Int) {
++        LauncherBenchmark.probe?.controllerStart = LauncherBenchmark.now()
++        defer { LauncherBenchmark.observedController(state) }
+         guard let selectedIndex = state.selectedIndex, !state.results.isEmpty else { return }
+ 
+         let resultCount = state.results.count
