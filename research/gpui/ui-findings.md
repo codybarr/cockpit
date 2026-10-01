@@ -94,8 +94,8 @@ These commands take keyboard focus and create 50,000 empty files in `/tmp/cockpi
 
 ## Next decisions
 
-1. Promote the bounded no-match candidate to normal production work with regression coverage, separately from this planning/research effort.
-2. Diagnose real FSEvents delivery/processing before treating any background-indexing latency as meaningful.
+1. [perf: avoid full filename scans for absent ASCII trigrams](https://github.com/codybarr/cockpit/issues/31) — promote the bounded native candidate with regression coverage, separately from this planning/research effort.
+2. [bug: diagnose real FSEvents filename-index refresh failures](https://github.com/codybarr/cockpit/issues/32) — establish real event delivery/processing before treating background-indexing latency as meaningful.
 3. If architecture evaluation remains open after native fixes, measure real hotkey/input-to-screen presentation, rapid coalesced input and resources on the identified release. Revisit GPUI only for a residual perceptible bottleneck that cheaper native changes do not remove.
 
 Keeping the current stack has strong support for the observed workload. It does not establish that every Cockpit interaction is instant or that GPUI could never improve another workload.
