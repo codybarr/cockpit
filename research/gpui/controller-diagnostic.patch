@@ -1,0 +1,48 @@
+diff --git a/Tests/CockpitTests/PerformanceBenchmarks.swift b/Tests/CockpitTests/PerformanceBenchmarks.swift
+index f187c90..5d31f28 100644
+--- a/Tests/CockpitTests/PerformanceBenchmarks.swift
++++ b/Tests/CockpitTests/PerformanceBenchmarks.swift
+@@ -15,13 +15,13 @@ final class PerformanceBenchmarks: XCTestCase {
+         let controller = makeController(filenameIndex: FixtureFilenameIndex(files: files))
+         controller.updateQuery("'report") // Warm the fixture and SwiftUI observation machinery.
+ 
+-        let querySamples = samples(count: 30) {
++        let querySamples = samples(count: 1_000, label: "query") {
+             controller.updateQuery("'report")
+         }
+-        let selectionSamples = samples(count: 30) {
++        let selectionSamples = samples(count: 1_000, label: "selection") {
+             controller.moveSelection(by: 1)
+         }
+-        let hotkeySamples = samples(count: 30) {
++        let hotkeySamples = samples(count: 1_000, label: "invoke") {
+             controller.invoke()
+         }
+ 
+@@ -54,12 +54,23 @@ final class PerformanceBenchmarks: XCTestCase {
+         )
+     }
+ 
+-    private func samples(count: Int, operation: () -> Void) -> [TimeInterval] {
+-        (0..<count).map { _ in
++    private func samples(count: Int, label: String, operation: () -> Void) -> [TimeInterval] {
++        let values = (0..<count).map { _ in
+             let start = DispatchTime.now().uptimeNanoseconds
+             operation()
+             return Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000_000
+-        }.sorted()
++        }
++        // Write outside the timed region. Diagnostic controller calls, not UI latency.
++        let path = ProcessInfo.processInfo.environment["GPUI_SAMPLES_PATH"]!
++        let csv = values.enumerated().map { "\(label),\($0.offset),\($0.element * 1_000)\n" }.joined()
++        if !FileManager.default.fileExists(atPath: path) {
++            _ = FileManager.default.createFile(atPath: path, contents: nil)
++        }
++        let handle = try! FileHandle(forWritingTo: URL(fileURLWithPath: path))
++        try! handle.seekToEnd()
++        try! handle.write(contentsOf: Data(csv.utf8))
++        try! handle.close()
++        return values.sorted()
+     }
+ 
+     private func percentile(_ samples: [TimeInterval], _ percentile: Double) -> TimeInterval {

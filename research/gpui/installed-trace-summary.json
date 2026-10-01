@@ -1,0 +1,222 @@
+{
+  "rows": 2658,
+  "sampled_cpu_ms": 2658.0,
+  "sampled_main_thread_ms": 2334.0,
+  "threads_ms": {
+    "com.apple.NSEventThread 0x689f (Cockpit, pid: 2028)": 121.0,
+    "Main Thread 0x6854 (Cockpit, pid: 2028)": 2334.0,
+    "Cockpit 0x6d15cc (Cockpit, pid: 2028)": 9.0,
+    "Cockpit 0x6d2500 (Cockpit, pid: 2028)": 23.0,
+    "Cockpit 0x6d2676 (Cockpit, pid: 2028)": 12.0,
+    "Cockpit 0x6d2697 (Cockpit, pid: 2028)": 7.0,
+    "Cockpit 0x6d26ba (Cockpit, pid: 2028)": 1.0,
+    "Cockpit 0x6d26b8 (Cockpit, pid: 2028)": 60.0,
+    "Cockpit 0x6d279c (Cockpit, pid: 2028)": 3.0,
+    "Cockpit 0x6d279a (Cockpit, pid: 2028)": 6.0,
+    "Cockpit 0x6d2799 (Cockpit, pid: 2028)": 41.0,
+    "Cockpit 0x6d279d (Cockpit, pid: 2028)": 2.0,
+    "Cockpit 0x6d279e (Cockpit, pid: 2028)": 2.0,
+    "Cockpit 0x6d26bb (Cockpit, pid: 2028)": 27.0,
+    "Cockpit 0x6d29e1 (Cockpit, pid: 2028)": 10.0
+  },
+  "inclusive_categories_ms": {
+    "panel presentation": 26.0,
+    "SwiftUI/SwiftUICore/AttributeGraph": 1446.0,
+    "query controller": 57.0,
+    "matching/ranking": 38.0,
+    "icons": 205.0,
+    "panel resize": 2.0
+  },
+  "inclusive_main_categories_ms": {
+    "panel presentation": 26.0,
+    "SwiftUI/SwiftUICore/AttributeGraph": 1446.0,
+    "query controller": 57.0,
+    "matching/ranking": 38.0,
+    "icons": 205.0,
+    "panel resize": 2.0
+  },
+  "top_app_frames_inclusive_ms": [
+    [
+      "@objc LauncherPanel.sendEvent(_:)",
+      271.0
+    ],
+    [
+      "LauncherPanel.sendEvent(_:)",
+      270.0
+    ],
+    [
+      "protocol witness for View.body.getter in conformance LauncherResultRow",
+      212.0
+    ],
+    [
+      "closure #1 in LauncherResultRow.body.getter",
+      209.0
+    ],
+    [
+      "closure #1 in closure #1 in LauncherResultRow.body.getter",
+      208.0
+    ],
+    [
+      "LauncherResultRow.resultIcon.getter",
+      205.0
+    ],
+    [
+      "LauncherController.updateQuery(_:)",
+      57.0
+    ],
+    [
+      "closure #2 in closure #1 in LauncherView.body.getter",
+      57.0
+    ],
+    [
+      "closure #1 in LauncherPanelController.scheduleResize()",
+      55.0
+    ],
+    [
+      "CockpitApp.showLauncher()",
+      52.0
+    ],
+    [
+      "partial apply for closure #1 in CockpitApp.registerLauncherHotkey(_:)",
+      52.0
+    ],
+    [
+      "specialized ApplicationSearch.ranked<A>(_:for:usageScore:)",
+      33.0
+    ],
+    [
+      "LauncherPanelController.hide()",
+      29.0
+    ],
+    [
+      "LauncherPanelController.present()",
+      26.0
+    ],
+    [
+      "specialized ApplicationSearch.matchQuality(for:normalizedName:tokens:)",
+      20.0
+    ],
+    [
+      "specialized ApplicationSearch.hasWordOrCamelCaseBoundary(_:in:originalName:)",
+      12.0
+    ],
+    [
+      "outlined destroy of LauncherResult",
+      8.0
+    ],
+    [
+      "initializeWithCopy for LauncherResult",
+      7.0
+    ],
+    [
+      "outlined init with copy of LauncherResult",
+      6.0
+    ],
+    [
+      "specialized ApplicationSearch.isFuzzyMatch(_:in:)",
+      6.0
+    ],
+    [
+      "LauncherView.body.getter",
+      6.0
+    ],
+    [
+      "closure #1 in LauncherView.body.getter",
+      6.0
+    ],
+    [
+      "protocol witness for View.body.getter in conformance LauncherView",
+      6.0
+    ],
+    [
+      "closure #1 in LauncherPanelController.init(controller:showSettings:)",
+      5.0
+    ],
+    [
+      "LauncherPanelController.scheduleResize()",
+      5.0
+    ]
+  ],
+  "top_leaf_frames_ms": [
+    [
+      "mach_msg2_trap",
+      115.0
+    ],
+    [
+      "objc_msgSend",
+      76.0
+    ],
+    [
+      "<deduplicated_symbol>",
+      66.0
+    ],
+    [
+      "__getattrlist",
+      39.0
+    ],
+    [
+      "__open",
+      37.0
+    ],
+    [
+      "__kdebug_trace64",
+      32.0
+    ],
+    [
+      "_xzm_xzone_malloc_tiny",
+      31.0
+    ],
+    [
+      "__CFStringHash",
+      31.0
+    ],
+    [
+      "__CF_IS_OBJC",
+      24.0
+    ],
+    [
+      "_platform_memmove",
+      23.0
+    ],
+    [
+      "_xzm_free_tc",
+      22.0
+    ],
+    [
+      "A8_mark_constmask(BltDepth const*, BltOp const*, MODE)",
+      22.0
+    ],
+    [
+      "start_wqthread",
+      21.0
+    ],
+    [
+      "swift_release",
+      20.0
+    ],
+    [
+      "objc_release",
+      18.0
+    ],
+    [
+      "stat",
+      17.0
+    ],
+    [
+      "swift::MetadataCacheKey::operator==(swift::MetadataCacheKey const&) const",
+      16.0
+    ],
+    [
+      "_platform_strcmp$VARIANT$Base",
+      13.0
+    ],
+    [
+      "_kernelrpc_mach_vm_deallocate_trap",
+      12.0
+    ],
+    [
+      "__CFStringEqual",
+      12.0
+    ]
+  ]
+}
