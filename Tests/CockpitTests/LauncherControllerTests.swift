@@ -237,6 +237,36 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertFalse(controller.state.isVisible)
     }
 
+    func testRealSettingsCatalogFindsAndLaunchesPreviouslyMissingSettings() throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let paneLauncher = RecordingSystemSettingsPaneLauncher()
+        let controller = makeController(
+            catalog: StubCatalog(applications: []),
+            systemSettingsPaneCatalog: SystemSettingsPaneCatalog(systemSettingsURL: root, macOSMajorVersion: 26),
+            systemSettingsPaneLauncher: paneLauncher
+        )
+        for (query, destination) in [
+            ("display", "com.apple.Displays-Settings.extension"),
+            ("wifi", "com.apple.wifi-settings-extension"),
+            ("bluetooth", "com.apple.BluetoothSettings"),
+            ("icloud", "com.apple.systempreferences.AppleIDSettings:icloud"),
+            ("menu bar", "com.apple.ControlCenter-Settings.extension*menubar"),
+        ] {
+            controller.invoke()
+            controller.updateQuery(query)
+            guard case let .systemSettingsPane(pane) = controller.state.selectedResult else {
+                XCTFail("Missing selected setting for \(query)")
+                continue
+            }
+            XCTAssertEqual(pane.destinationURL.absoluteString, "x-apple.systempreferences:\(destination)")
+            controller.executeSelectedResult()
+            XCTAssertEqual(paneLauncher.launchedPanes.last, pane)
+            XCTAssertFalse(controller.state.isVisible)
+        }
+    }
+
     func testValidArithmeticExpressionShowsCalculatorResultAndCopiesItWhenExecuted() {
         let copier = RecordingCalculationCopier()
         let controller = makeController(catalog: StubCatalog(applications: []), calculationCopier: copier)
@@ -338,7 +368,7 @@ final class LauncherControllerTests: XCTestCase {
         catalog: StubCatalog,
         launcher: any ApplicationLaunching = RecordingApplicationLauncher(),
         revealer: RecordingApplicationRevealer = RecordingApplicationRevealer(),
-        systemSettingsPaneCatalog: StubSystemSettingsPaneCatalog = StubSystemSettingsPaneCatalog(panes: []),
+        systemSettingsPaneCatalog: any SystemSettingsPaneCataloging = StubSystemSettingsPaneCatalog(panes: []),
         systemSettingsPaneLauncher: RecordingSystemSettingsPaneLauncher = RecordingSystemSettingsPaneLauncher(),
         systemActionExecutor: RecordingSystemActionExecutor = RecordingSystemActionExecutor(),
         filenameIndex: StubFilenameIndex = StubFilenameIndex(files: []),

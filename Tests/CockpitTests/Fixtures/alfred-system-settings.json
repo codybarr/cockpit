@@ -1,0 +1,940 @@
+{
+  "13": [
+    {
+      "name": "About",
+      "url": "x-apple.systempreferences:com.apple.SystemProfiler.AboutExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AboutExtension.appex"
+    },
+    {
+      "name": "Accessibility",
+      "url": "x-apple.systempreferences:com.apple.Accessibility-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AccessibilitySettingsExtension.appex"
+    },
+    {
+      "name": "AirDrop & Handoff",
+      "url": "x-apple.systempreferences:com.apple.AirDrop-Handoff-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AirDropHandoffExtension.appex"
+    },
+    {
+      "name": "Appearance",
+      "url": "x-apple.systempreferences:com.apple.Appearance-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Appearance.appex"
+    },
+    {
+      "name": "Apple ID",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.AppleIDSettings*AppleIDSettings",
+      "icon": "/System/Library/ExtensionKit/Extensions/AppleIDSettings.appex"
+    },
+    {
+      "name": "Bluetooth",
+      "url": "x-apple.systempreferences:com.apple.BluetoothSettings",
+      "icon": "/System/Library/ExtensionKit/Extensions/Bluetooth.appex"
+    },
+    {
+      "name": "Control Center",
+      "url": "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ControlCenterSettings.appex"
+    },
+    {
+      "name": "Date & Time",
+      "url": "x-apple.systempreferences:com.apple.Date-Time-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DateAndTime Extension.appex"
+    },
+    {
+      "name": "Desktop & Dock",
+      "url": "x-apple.systempreferences:com.apple.Desktop-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DesktopSettings.appex"
+    },
+    {
+      "name": "Profiles",
+      "url": "x-apple.systempreferences:com.apple.Profiles-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ProfilesSettingsExt.appex"
+    },
+    {
+      "name": "Displays",
+      "url": "x-apple.systempreferences:com.apple.Displays-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DisplaysExt.appex"
+    },
+    {
+      "name": "Family",
+      "url": "x-apple.systempreferences:com.apple.Family-Settings.extension*Family",
+      "icon": "/System/Library/ExtensionKit/Extensions/FamilySettings.appex"
+    },
+    {
+      "name": "Focus",
+      "url": "x-apple.systempreferences:com.apple.Focus-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/FocusSettingsExtension.appex"
+    },
+    {
+      "name": "General",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.GeneralSettings",
+      "icon": "/System/Applications/System Settings.app/Contents/PlugIns/GeneralSettings.appex"
+    },
+    {
+      "name": "Game Center",
+      "url": "x-apple.systempreferences:com.apple.Game-Center-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/GameCenterMacOSSettingsExtension.appex"
+    },
+    {
+      "name": "Game Controllers",
+      "url": "x-apple.systempreferences:com.apple.Game-Controller-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/GameControllerMacSettings.appex"
+    },
+    {
+      "name": "Internet Accounts",
+      "url": "x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/InternetAccountsSettingsExtension.appex"
+    },
+    {
+      "name": "Keyboard",
+      "url": "x-apple.systempreferences:com.apple.Keyboard-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/KeyboardSettings.appex"
+    },
+    {
+      "name": "Language & Region",
+      "url": "x-apple.systempreferences:com.apple.Localization-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Localization.appex"
+    },
+    {
+      "name": "Lock Screen",
+      "url": "x-apple.systempreferences:com.apple.Lock-Screen-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/LockScreen.appex"
+    },
+    {
+      "name": "Login Items",
+      "url": "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/LoginItems.appex"
+    },
+    {
+      "name": "Mouse",
+      "url": "x-apple.systempreferences:com.apple.Mouse-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/MouseExtension.appex"
+    },
+    {
+      "name": "Network",
+      "url": "x-apple.systempreferences:com.apple.Network-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Network.appex"
+    },
+    {
+      "name": "Notifications",
+      "url": "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/NotificationsSettings.appex"
+    },
+    {
+      "name": "Printers & Scanners",
+      "url": "x-apple.systempreferences:com.apple.Print-Scan-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/PrinterScannerSettings.appex"
+    },
+    {
+      "name": "Privacy & Security",
+      "url": "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SecurityPrivacyExtension.appex"
+    },
+    {
+      "name": "Screen Saver",
+      "url": "x-apple.systempreferences:com.apple.ScreenSaver-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Screen Saver.appex"
+    },
+    {
+      "name": "Screen Time",
+      "url": "x-apple.systempreferences:com.apple.Screen-Time-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ScreenTimePreferencesExtension.appex"
+    },
+    {
+      "name": "Sharing",
+      "url": "x-apple.systempreferences:com.apple.Sharing-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Sharing.appex"
+    },
+    {
+      "name": "Software Update",
+      "url": "x-apple.systempreferences:com.apple.Software-Update-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SUOSUPreferencePaneExtension.appex"
+    },
+    {
+      "name": "Sound",
+      "url": "x-apple.systempreferences:com.apple.Sound-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Sound.appex"
+    },
+    {
+      "name": "Startup Disk",
+      "url": "x-apple.systempreferences:com.apple.Startup-Disk-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/StartupDisk.appex"
+    },
+    {
+      "name": "Storage",
+      "url": "x-apple.systempreferences:com.apple.settings.Storage",
+      "icon": "/System/Library/ExtensionKit/Extensions/Storage.appex"
+    },
+    {
+      "name": "Time Machine",
+      "url": "x-apple.systempreferences:com.apple.Time-Machine-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TimeMachineSettings.appex"
+    },
+    {
+      "name": "Touch ID & Password",
+      "url": "x-apple.systempreferences:com.apple.Touch-ID-Settings.extension*TouchIDPasswordPrefs",
+      "icon": "/System/Library/ExtensionKit/Extensions/Touch ID & Password.appex"
+    },
+    {
+      "name": "Trackpad",
+      "url": "x-apple.systempreferences:com.apple.Trackpad-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TrackpadExtension.appex"
+    },
+    {
+      "name": "Transfer or Reset",
+      "url": "x-apple.systempreferences:com.apple.Transfer-Reset-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TransferResetExtension.appex"
+    },
+    {
+      "name": "Users & Groups",
+      "url": "x-apple.systempreferences:com.apple.Users-Groups-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/UsersGroups.appex"
+    },
+    {
+      "name": "Wallet & Apple Pay",
+      "url": "x-apple.systempreferences:com.apple.WalletSettingsExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/WalletSettingsExtension.appex"
+    },
+    {
+      "name": "VPN",
+      "url": "x-apple.systempreferences:com.apple.NetworkExtensionSettingsUI.NESettingsUIExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/VPN.appex"
+    },
+    {
+      "name": "Wallpaper",
+      "url": "x-apple.systempreferences:com.apple.Wallpaper-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Wallpaper.appex"
+    },
+    {
+      "name": "Wi‑Fi",
+      "url": "x-apple.systempreferences:com.apple.wifi-settings-extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/WiFiSettings.appex"
+    },
+    {
+      "name": "Battery",
+      "url": "x-apple.systempreferences:com.apple.Battery-Settings.extension",
+      "icon": "__customicon_battery.appex"
+    },
+    {
+      "name": "Siri & Spotlight",
+      "url": "x-apple.systempreferences:com.apple.Siri-Settings.extension",
+      "icon": "/System/Applications/Siri.app"
+    },
+    {
+      "name": "iCloud",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.AppleIDSettings:icloud",
+      "icon": "/System/Library/CoreServices/Finder.app/Contents/Applications/iCloud Drive.app"
+    },
+    {
+      "name": "Passwords",
+      "url": "x-apple.systempreferences:com.apple.Passwords-Settings.extension",
+      "icon": "/System/Volumes/Preboot/Cryptexes/App/System/Library/CoreServices/PasswordsSettingsExtension.appex"
+    }
+  ],
+  "14": [
+    {
+      "name": "About",
+      "url": "x-apple.systempreferences:com.apple.SystemProfiler.AboutExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AboutExtension.appex"
+    },
+    {
+      "name": "Accessibility",
+      "url": "x-apple.systempreferences:com.apple.Accessibility-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AccessibilitySettingsExtension.appex"
+    },
+    {
+      "name": "AirDrop & Handoff",
+      "url": "x-apple.systempreferences:com.apple.AirDrop-Handoff-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AirDropHandoffExtension.appex"
+    },
+    {
+      "name": "Appearance",
+      "url": "x-apple.systempreferences:com.apple.Appearance-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Appearance.appex"
+    },
+    {
+      "name": "AppleCare & Warranty",
+      "url": "x-apple.systempreferences:com.apple.Coverage-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/CoverageSettings.appex"
+    },
+    {
+      "name": "Apple ID",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.AppleIDSettings*AppleIDSettings",
+      "icon": "/System/Library/ExtensionKit/Extensions/AppleIDSettings.appex"
+    },
+    {
+      "name": "Bluetooth",
+      "url": "x-apple.systempreferences:com.apple.BluetoothSettings",
+      "icon": "/System/Library/ExtensionKit/Extensions/Bluetooth.appex"
+    },
+    {
+      "name": "Control Center",
+      "url": "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ControlCenterSettings.appex"
+    },
+    {
+      "name": "Date & Time",
+      "url": "x-apple.systempreferences:com.apple.Date-Time-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DateAndTime Extension.appex"
+    },
+    {
+      "name": "Desktop & Dock",
+      "url": "x-apple.systempreferences:com.apple.Desktop-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DesktopSettings.appex"
+    },
+    {
+      "name": "Profiles",
+      "url": "x-apple.systempreferences:com.apple.Profiles-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ProfilesSettingsExt.appex"
+    },
+    {
+      "name": "Displays",
+      "url": "x-apple.systempreferences:com.apple.Displays-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DisplaysExt.appex"
+    },
+    {
+      "name": "Family",
+      "url": "x-apple.systempreferences:com.apple.Family-Settings.extension*Family",
+      "icon": "/System/Library/ExtensionKit/Extensions/FamilySettings.appex"
+    },
+    {
+      "name": "Focus",
+      "url": "x-apple.systempreferences:com.apple.Focus-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/FocusSettingsExtension.appex"
+    },
+    {
+      "name": "General",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.GeneralSettings",
+      "icon": "/System/Applications/System Settings.app/Contents/PlugIns/GeneralSettings.appex"
+    },
+    {
+      "name": "Game Center",
+      "url": "x-apple.systempreferences:com.apple.Game-Center-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/GameCenterMacOSSettingsExtension.appex"
+    },
+    {
+      "name": "Game Controllers",
+      "url": "x-apple.systempreferences:com.apple.Game-Controller-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/GameControllerMacSettings.appex"
+    },
+    {
+      "name": "Internet Accounts",
+      "url": "x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/InternetAccountsSettingsExtension.appex"
+    },
+    {
+      "name": "Keyboard",
+      "url": "x-apple.systempreferences:com.apple.Keyboard-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/KeyboardSettings.appex"
+    },
+    {
+      "name": "Language & Region",
+      "url": "x-apple.systempreferences:com.apple.Localization-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Localization.appex"
+    },
+    {
+      "name": "Lock Screen",
+      "url": "x-apple.systempreferences:com.apple.Lock-Screen-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/LockScreen.appex"
+    },
+    {
+      "name": "Login Items",
+      "url": "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/LoginItems.appex"
+    },
+    {
+      "name": "Mouse",
+      "url": "x-apple.systempreferences:com.apple.Mouse-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/MouseExtension.appex"
+    },
+    {
+      "name": "Network",
+      "url": "x-apple.systempreferences:com.apple.Network-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Network.appex"
+    },
+    {
+      "name": "Notifications",
+      "url": "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/NotificationsSettings.appex"
+    },
+    {
+      "name": "Printers & Scanners",
+      "url": "x-apple.systempreferences:com.apple.Print-Scan-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/PrinterScannerSettings.appex"
+    },
+    {
+      "name": "Privacy & Security",
+      "url": "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SecurityPrivacyExtension.appex"
+    },
+    {
+      "name": "Screen Saver",
+      "url": "x-apple.systempreferences:com.apple.ScreenSaver-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Screen Saver.appex"
+    },
+    {
+      "name": "Screen Time",
+      "url": "x-apple.systempreferences:com.apple.Screen-Time-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ScreenTimePreferencesExtension.appex"
+    },
+    {
+      "name": "Sharing",
+      "url": "x-apple.systempreferences:com.apple.Sharing-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Sharing.appex"
+    },
+    {
+      "name": "Software Update",
+      "url": "x-apple.systempreferences:com.apple.Software-Update-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SoftwareUpdateSettingsExtension.appex"
+    },
+    {
+      "name": "Sound",
+      "url": "x-apple.systempreferences:com.apple.Sound-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Sound.appex"
+    },
+    {
+      "name": "Startup Disk",
+      "url": "x-apple.systempreferences:com.apple.Startup-Disk-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/StartupDisk.appex"
+    },
+    {
+      "name": "Storage",
+      "url": "x-apple.systempreferences:com.apple.settings.Storage",
+      "icon": "/System/Library/ExtensionKit/Extensions/Storage.appex"
+    },
+    {
+      "name": "Time Machine",
+      "url": "x-apple.systempreferences:com.apple.Time-Machine-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TimeMachineSettings.appex"
+    },
+    {
+      "name": "Touch ID & Password",
+      "url": "x-apple.systempreferences:com.apple.Touch-ID-Settings.extension*TouchIDPasswordPrefs",
+      "icon": "/System/Library/ExtensionKit/Extensions/Touch ID & Password.appex"
+    },
+    {
+      "name": "Trackpad",
+      "url": "x-apple.systempreferences:com.apple.Trackpad-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TrackpadExtension.appex"
+    },
+    {
+      "name": "Transfer or Reset",
+      "url": "x-apple.systempreferences:com.apple.Transfer-Reset-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TransferResetExtension.appex"
+    },
+    {
+      "name": "Users & Groups",
+      "url": "x-apple.systempreferences:com.apple.Users-Groups-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/UsersGroups.appex"
+    },
+    {
+      "name": "Wallet & Apple Pay",
+      "url": "x-apple.systempreferences:com.apple.WalletSettingsExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/WalletSettingsExtension.appex"
+    },
+    {
+      "name": "VPN",
+      "url": "x-apple.systempreferences:com.apple.NetworkExtensionSettingsUI.NESettingsUIExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/VPN.appex"
+    },
+    {
+      "name": "Wallpaper",
+      "url": "x-apple.systempreferences:com.apple.Wallpaper-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Wallpaper.appex"
+    },
+    {
+      "name": "Wi‑Fi",
+      "url": "x-apple.systempreferences:com.apple.wifi-settings-extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Wi-Fi.appex"
+    },
+    {
+      "name": "Battery",
+      "url": "x-apple.systempreferences:com.apple.Battery-Settings.extension*BatteryPreferences",
+      "icon": "__customicon_battery.appex"
+    },
+    {
+      "name": "Siri & Spotlight",
+      "url": "x-apple.systempreferences:com.apple.Siri-Settings.extension*siri-sae",
+      "icon": "/System/Applications/Siri.app"
+    },
+    {
+      "name": "iCloud",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.AppleIDSettings:icloud",
+      "icon": "/System/Library/CoreServices/Finder.app/Contents/Applications/iCloud Drive.app"
+    },
+    {
+      "name": "Passwords",
+      "url": "x-apple.systempreferences:com.apple.Passwords-Settings.extension",
+      "icon": "/System/Volumes/Preboot/Cryptexes/App/System/Library/CoreServices/PasswordsSettingsExtension.appex"
+    }
+  ],
+  "15": [
+    {
+      "name": "About",
+      "url": "x-apple.systempreferences:com.apple.SystemProfiler.AboutExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AboutExtension.appex"
+    },
+    {
+      "name": "Accessibility",
+      "url": "x-apple.systempreferences:com.apple.Accessibility-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AccessibilitySettingsExtension.appex"
+    },
+    {
+      "name": "AirDrop & Handoff",
+      "url": "x-apple.systempreferences:com.apple.AirDrop-Handoff-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AirDropHandoffExtension.appex"
+    },
+    {
+      "name": "Appearance",
+      "url": "x-apple.systempreferences:com.apple.Appearance-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Appearance.appex"
+    },
+    {
+      "name": "AppleCare & Warranty",
+      "url": "x-apple.systempreferences:com.apple.Coverage-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/CoverageSettings.appex"
+    },
+    {
+      "name": "Apple Account",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.AppleIDSettings*AppleIDSettings",
+      "icon": "/System/Library/ExtensionKit/Extensions/AppleIDSettings.appex"
+    },
+    {
+      "name": "Bluetooth",
+      "url": "x-apple.systempreferences:com.apple.BluetoothSettings",
+      "icon": "/System/Library/ExtensionKit/Extensions/Bluetooth.appex"
+    },
+    {
+      "name": "Control Center",
+      "url": "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ControlCenterSettings.appex"
+    },
+    {
+      "name": "Date & Time",
+      "url": "x-apple.systempreferences:com.apple.Date-Time-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DateAndTime Extension.appex"
+    },
+    {
+      "name": "Desktop & Dock",
+      "url": "x-apple.systempreferences:com.apple.Desktop-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DesktopSettings.appex"
+    },
+    {
+      "name": "Device Management",
+      "url": "x-apple.systempreferences:com.apple.Profiles-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ProfilesSettingsExt.appex"
+    },
+    {
+      "name": "Displays",
+      "url": "x-apple.systempreferences:com.apple.Displays-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DisplaysExt.appex"
+    },
+    {
+      "name": "Family",
+      "url": "x-apple.systempreferences:com.apple.Family-Settings.extension*Family",
+      "icon": "/System/Library/ExtensionKit/Extensions/FamilySettings.appex"
+    },
+    {
+      "name": "Focus",
+      "url": "x-apple.systempreferences:com.apple.Focus-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/FocusSettingsExtension.appex"
+    },
+    {
+      "name": "General",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.GeneralSettings",
+      "icon": "/System/Applications/System Settings.app/Contents/PlugIns/GeneralSettings.appex"
+    },
+    {
+      "name": "Game Center",
+      "url": "x-apple.systempreferences:com.apple.Game-Center-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/GameCenterMacOSSettingsExtension.appex"
+    },
+    {
+      "name": "Game Controllers",
+      "url": "x-apple.systempreferences:com.apple.Game-Controller-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/GameControllerMacSettings.appex"
+    },
+    {
+      "name": "Internet Accounts",
+      "url": "x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/InternetAccountsSettingsExtension.appex"
+    },
+    {
+      "name": "Keyboard",
+      "url": "x-apple.systempreferences:com.apple.Keyboard-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/KeyboardSettings.appex"
+    },
+    {
+      "name": "Language & Region",
+      "url": "x-apple.systempreferences:com.apple.Localization-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Localization.appex"
+    },
+    {
+      "name": "Lock Screen",
+      "url": "x-apple.systempreferences:com.apple.Lock-Screen-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/LockScreen.appex"
+    },
+    {
+      "name": "Login Items & Extensions",
+      "url": "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/LoginItems.appex"
+    },
+    {
+      "name": "Mouse",
+      "url": "x-apple.systempreferences:com.apple.Mouse-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/MouseExtension.appex"
+    },
+    {
+      "name": "Network",
+      "url": "x-apple.systempreferences:com.apple.Network-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Network.appex"
+    },
+    {
+      "name": "Notifications",
+      "url": "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/NotificationsSettings.appex"
+    },
+    {
+      "name": "Printers & Scanners",
+      "url": "x-apple.systempreferences:com.apple.Print-Scan-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/PrinterScannerSettings.appex"
+    },
+    {
+      "name": "Privacy & Security",
+      "url": "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SecurityPrivacyExtension.appex"
+    },
+    {
+      "name": "Screen Saver",
+      "url": "x-apple.systempreferences:com.apple.ScreenSaver-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Screen Saver.appex"
+    },
+    {
+      "name": "Screen Time",
+      "url": "x-apple.systempreferences:com.apple.Screen-Time-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ScreenTimePreferencesExtension.appex"
+    },
+    {
+      "name": "Sharing",
+      "url": "x-apple.systempreferences:com.apple.Sharing-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Sharing.appex"
+    },
+    {
+      "name": "Spotlight",
+      "url": "x-apple.systempreferences:com.apple.Spotlight-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SpotlightPreferenceExtension.appex"
+    },
+    {
+      "name": "Software Update",
+      "url": "x-apple.systempreferences:com.apple.Software-Update-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SoftwareUpdateSettingsExtension.appex"
+    },
+    {
+      "name": "Sound",
+      "url": "x-apple.systempreferences:com.apple.Sound-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Sound.appex"
+    },
+    {
+      "name": "Startup Disk",
+      "url": "x-apple.systempreferences:com.apple.Startup-Disk-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/StartupDisk.appex"
+    },
+    {
+      "name": "Storage",
+      "url": "x-apple.systempreferences:com.apple.settings.Storage",
+      "icon": "/System/Library/ExtensionKit/Extensions/Storage.appex"
+    },
+    {
+      "name": "Time Machine",
+      "url": "x-apple.systempreferences:com.apple.Time-Machine-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TimeMachineSettings.appex"
+    },
+    {
+      "name": "Touch ID & Password",
+      "url": "x-apple.systempreferences:com.apple.Touch-ID-Settings.extension*TouchIDPasswordPrefs",
+      "icon": "/System/Library/ExtensionKit/Extensions/Touch ID & Password.appex"
+    },
+    {
+      "name": "Trackpad",
+      "url": "x-apple.systempreferences:com.apple.Trackpad-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TrackpadExtension.appex"
+    },
+    {
+      "name": "Transfer or Reset",
+      "url": "x-apple.systempreferences:com.apple.Transfer-Reset-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TransferResetExtension.appex"
+    },
+    {
+      "name": "Users & Groups",
+      "url": "x-apple.systempreferences:com.apple.Users-Groups-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/UsersGroups.appex"
+    },
+    {
+      "name": "Wallet & Apple Pay",
+      "url": "x-apple.systempreferences:com.apple.WalletSettingsExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/WalletSettingsExtension.appex"
+    },
+    {
+      "name": "VPN",
+      "url": "x-apple.systempreferences:com.apple.NetworkExtensionSettingsUI.NESettingsUIExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/VPN.appex"
+    },
+    {
+      "name": "Wallpaper",
+      "url": "x-apple.systempreferences:com.apple.Wallpaper-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Wallpaper.appex"
+    },
+    {
+      "name": "Wi‑Fi",
+      "url": "x-apple.systempreferences:com.apple.wifi-settings-extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Wi-Fi.appex"
+    },
+    {
+      "name": "Battery",
+      "url": "x-apple.systempreferences:com.apple.Battery-Settings.extension*BatteryPreferences",
+      "icon": "__customicon_battery.appex"
+    },
+    {
+      "name": "Apple Intelligence & Siri",
+      "url": "x-apple.systempreferences:com.apple.Siri-Settings.extension*siri-sae",
+      "icon": "/System/Applications/Siri.app"
+    },
+    {
+      "name": "iCloud",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.AppleIDSettings:icloud",
+      "icon": "/System/Library/CoreServices/Finder.app/Contents/Applications/iCloud Drive.app"
+    }
+  ],
+  "26": [
+    {
+      "name": "About",
+      "url": "x-apple.systempreferences:com.apple.SystemProfiler.AboutExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AboutExtension.appex"
+    },
+    {
+      "name": "Accessibility",
+      "url": "x-apple.systempreferences:com.apple.Accessibility-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AccessibilitySettingsExtension.appex"
+    },
+    {
+      "name": "AirDrop & Handoff",
+      "url": "x-apple.systempreferences:com.apple.AirDrop-Handoff-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/AirDropHandoffExtension.appex"
+    },
+    {
+      "name": "Appearance",
+      "url": "x-apple.systempreferences:com.apple.Appearance-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Appearance.appex"
+    },
+    {
+      "name": "AppleCare & Warranty",
+      "url": "x-apple.systempreferences:com.apple.Coverage-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/CoverageSettings.appex"
+    },
+    {
+      "name": "Apple Account",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.AppleIDSettings*AppleIDSettings",
+      "icon": "/System/Library/ExtensionKit/Extensions/AppleIDSettings.appex"
+    },
+    {
+      "name": "Bluetooth",
+      "url": "x-apple.systempreferences:com.apple.BluetoothSettings",
+      "icon": "/System/Library/ExtensionKit/Extensions/Bluetooth.appex"
+    },
+    {
+      "name": "Date & Time",
+      "url": "x-apple.systempreferences:com.apple.Date-Time-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DateAndTime Extension.appex"
+    },
+    {
+      "name": "Desktop & Dock",
+      "url": "x-apple.systempreferences:com.apple.Desktop-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DesktopSettings.appex"
+    },
+    {
+      "name": "Device Management",
+      "url": "x-apple.systempreferences:com.apple.Profiles-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ProfilesSettingsExt.appex"
+    },
+    {
+      "name": "Displays",
+      "url": "x-apple.systempreferences:com.apple.Displays-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/DisplaysExt.appex"
+    },
+    {
+      "name": "Family",
+      "url": "x-apple.systempreferences:com.apple.Family-Settings.extension*Family",
+      "icon": "/System/Library/ExtensionKit/Extensions/FamilySettings.appex"
+    },
+    {
+      "name": "Focus",
+      "url": "x-apple.systempreferences:com.apple.Focus-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/FocusSettingsExtension.appex"
+    },
+    {
+      "name": "General",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.GeneralSettings",
+      "icon": "/System/Applications/System Settings.app/Contents/PlugIns/GeneralSettings.appex"
+    },
+    {
+      "name": "Game Center",
+      "url": "x-apple.systempreferences:com.apple.Game-Center-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/GameCenterMacOSSettingsExtension.appex"
+    },
+    {
+      "name": "Game Controllers",
+      "url": "x-apple.systempreferences:com.apple.Game-Controller-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/GameControllerMacSettings.appex"
+    },
+    {
+      "name": "Internet Accounts",
+      "url": "x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/InternetAccountsSettingsExtension.appex"
+    },
+    {
+      "name": "Keyboard",
+      "url": "x-apple.systempreferences:com.apple.Keyboard-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/KeyboardSettings.appex"
+    },
+    {
+      "name": "Language & Region",
+      "url": "x-apple.systempreferences:com.apple.Localization-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Localization.appex"
+    },
+    {
+      "name": "Lock Screen",
+      "url": "x-apple.systempreferences:com.apple.Lock-Screen-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/LockScreen.appex"
+    },
+    {
+      "name": "Login Items & Extensions",
+      "url": "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/LoginItems.appex"
+    },
+    {
+      "name": "Mouse",
+      "url": "x-apple.systempreferences:com.apple.Mouse-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/MouseExtension.appex"
+    },
+    {
+      "name": "Network",
+      "url": "x-apple.systempreferences:com.apple.Network-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Network.appex"
+    },
+    {
+      "name": "Notifications",
+      "url": "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/NotificationsSettings.appex"
+    },
+    {
+      "name": "Printers & Scanners",
+      "url": "x-apple.systempreferences:com.apple.Print-Scan-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/PrinterScannerSettings.appex"
+    },
+    {
+      "name": "Privacy & Security",
+      "url": "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SecurityPrivacyExtension.appex"
+    },
+    {
+      "name": "Screen Time",
+      "url": "x-apple.systempreferences:com.apple.Screen-Time-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/ScreenTimePreferencesExtension.appex"
+    },
+    {
+      "name": "Sharing",
+      "url": "x-apple.systempreferences:com.apple.Sharing-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Sharing.appex"
+    },
+    {
+      "name": "Spotlight",
+      "url": "x-apple.systempreferences:com.apple.Spotlight-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SpotlightPreferenceExtension.appex"
+    },
+    {
+      "name": "Software Update",
+      "url": "x-apple.systempreferences:com.apple.Software-Update-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/SoftwareUpdateSettingsExtension.appex"
+    },
+    {
+      "name": "Sound",
+      "url": "x-apple.systempreferences:com.apple.Sound-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Sound.appex"
+    },
+    {
+      "name": "Startup Disk",
+      "url": "x-apple.systempreferences:com.apple.Startup-Disk-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/StartupDisk.appex"
+    },
+    {
+      "name": "Storage",
+      "url": "x-apple.systempreferences:com.apple.settings.Storage",
+      "icon": "/System/Library/ExtensionKit/Extensions/Storage.appex"
+    },
+    {
+      "name": "Time Machine",
+      "url": "x-apple.systempreferences:com.apple.Time-Machine-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TimeMachineSettings.appex"
+    },
+    {
+      "name": "Touch ID & Password",
+      "url": "x-apple.systempreferences:com.apple.Touch-ID-Settings.extension*TouchIDPasswordPrefs",
+      "icon": "/System/Library/ExtensionKit/Extensions/Touch ID & Password.appex"
+    },
+    {
+      "name": "Trackpad",
+      "url": "x-apple.systempreferences:com.apple.Trackpad-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TrackpadExtension.appex"
+    },
+    {
+      "name": "Transfer or Reset",
+      "url": "x-apple.systempreferences:com.apple.Transfer-Reset-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/TransferResetExtension.appex"
+    },
+    {
+      "name": "Users & Groups",
+      "url": "x-apple.systempreferences:com.apple.Users-Groups-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/UsersGroups.appex"
+    },
+    {
+      "name": "Wallet & Apple Pay",
+      "url": "x-apple.systempreferences:com.apple.WalletSettingsExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/WalletSettingsExtension.appex"
+    },
+    {
+      "name": "VPN",
+      "url": "x-apple.systempreferences:com.apple.NetworkExtensionSettingsUI.NESettingsUIExtension",
+      "icon": "/System/Library/ExtensionKit/Extensions/VPN.appex"
+    },
+    {
+      "name": "Wallpaper",
+      "url": "x-apple.systempreferences:com.apple.Wallpaper-Settings.extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Wallpaper.appex"
+    },
+    {
+      "name": "Wi‑Fi",
+      "url": "x-apple.systempreferences:com.apple.wifi-settings-extension",
+      "icon": "/System/Library/ExtensionKit/Extensions/Wi-Fi.appex"
+    },
+    {
+      "name": "Battery",
+      "url": "x-apple.systempreferences:com.apple.Battery-Settings.extension*BatteryPreferences",
+      "icon": "__customicon_battery.appex"
+    },
+    {
+      "name": "Menu Bar",
+      "url": "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension*menubar",
+      "icon": "__customicon_menubar.appex"
+    },
+    {
+      "name": "Apple Intelligence & Siri",
+      "url": "x-apple.systempreferences:com.apple.Siri-Settings.extension*siri-sae",
+      "icon": "/System/Applications/Siri.app"
+    },
+    {
+      "name": "iCloud",
+      "url": "x-apple.systempreferences:com.apple.systempreferences.AppleIDSettings:icloud",
+      "icon": "/System/Library/CoreServices/Finder.app/Contents/Applications/iCloud Drive.app"
+    }
+  ]
+}

@@ -485,18 +485,23 @@ private struct LauncherResultRow: View {
             Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
                 .resizable()
         case let .systemSettingsPane(pane):
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white.opacity(0.10))
-                if let resourcePath = pane.icon.resourcePath, let image = NSImage(contentsOfFile: resourcePath) {
-                    Image(nsImage: image)
-                        .resizable()
-                        .padding(4)
-                } else {
-                    Image(systemName: pane.icon.symbolName)
-                        .font(.system(size: 23, weight: .medium))
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(paneIconColor(pane.icon.color))
+            if let iconBundlePath = pane.iconBundlePath, FileManager.default.fileExists(atPath: iconBundlePath) {
+                Image(nsImage: NSWorkspace.shared.icon(forFile: iconBundlePath))
+                    .resizable()
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.white.opacity(0.10))
+                    if let resourcePath = pane.icon.resourcePath, let image = NSImage(contentsOfFile: resourcePath) {
+                        Image(nsImage: image)
+                            .resizable()
+                            .padding(4)
+                    } else {
+                        Image(systemName: pane.icon.symbolName)
+                            .font(.system(size: 23, weight: .medium))
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(paneIconColor(pane.icon.color))
+                    }
                 }
             }
         case let .file(file):

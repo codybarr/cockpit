@@ -3,12 +3,13 @@ import Foundation
 struct SystemSettingsPane: Equatable, Sendable, Identifiable {
     let name: String
     let identifier: String
+    var iconBundlePath: String? = nil
 
     var id: String { identifier }
     var destinationURL: URL { URL(string: "x-apple.systempreferences:\(identifier)")! }
 
     var icon: SystemSettingsPaneIcon {
-        switch identifier {
+        switch identifier.split(whereSeparator: { $0 == "*" || $0 == ":" }).first.map(String.init) ?? identifier {
         case "com.apple.SystemProfiler.AboutExtension": .init(symbolName: "info.circle.fill", color: .gray)
         case "com.apple.Accessibility-Settings.extension": .init(symbolName: "accessibility", color: .blue)
         case "com.apple.Appearance-Settings.extension": .init(symbolName: "circle.lefthalf.filled", color: .gray)
@@ -16,7 +17,7 @@ struct SystemSettingsPane: Equatable, Sendable, Identifiable {
         case "com.apple.Battery-Settings.extension": .init(symbolName: "battery.100percent", color: .green)
         case "com.apple.BluetoothSettings": .init(symbolName: "antenna.radiowaves.left.and.right", color: .blue, resourcePath: "/System/Library/PrivateFrameworks/CoreBluetoothUI.framework/Versions/A/Resources/Bluetooth.icns")
         case "com.apple.CD-DVD-Settings.extension": .init(symbolName: "opticaldisc.fill", color: .gray)
-        case "com.apple.ControlCenter-Settings.extension": .init(symbolName: "switch.2", color: .gray)
+        case "com.apple.ControlCenter-Settings.extension": .init(symbolName: identifier.hasSuffix("*menubar") ? "menubar.rectangle" : "switch.2", color: .gray)
         case "com.apple.Desktop-Settings.extension": .init(symbolName: "dock.rectangle", color: .gray)
         case "com.apple.Displays-Settings.extension": .init(symbolName: "sun.max.fill", color: .blue)
         case "com.apple.Family-Settings.extension", "com.apple.Users-Groups-Settings.extension": .init(symbolName: "person.2.fill", color: .blue)
@@ -92,84 +93,28 @@ final class SystemSettingsPaneCache: SystemSettingsPaneCataloging, @unchecked Se
 struct SystemSettingsPaneCatalog: SystemSettingsPaneCataloging {
     private let fileManager: FileManager
     private let systemSettingsURL: URL
+    private let macOSMajorVersion: Int
 
     init(
         fileManager: FileManager = .default,
-        systemSettingsURL: URL = URL(fileURLWithPath: "/System/Applications/System Settings.app")
+        systemSettingsURL: URL = URL(fileURLWithPath: "/System/Applications/System Settings.app"),
+        macOSMajorVersion: Int = ProcessInfo.processInfo.operatingSystemVersion.majorVersion
     ) {
         self.fileManager = fileManager
         self.systemSettingsURL = systemSettingsURL
+        self.macOSMajorVersion = macOSMajorVersion
     }
 
     func panes() -> [SystemSettingsPane] {
         guard fileManager.fileExists(atPath: systemSettingsURL.path) else { return [] }
-        let availableIdentifiers = declaredDestinationIdentifiers()
-        return Self.supportedPanes.filter { availableIdentifiers.contains($0.identifier) }
+        // Private sidebar plists move between macOS releases. Their absence must never
+        // hide launchable destinations; use the audited, version-specific reference instead.
+        return SystemSettingsReference.panes(for: macOSMajorVersion)
     }
 
-    /// Reads System Settings' own sidebar and General subpane declarations instead of exposing
-    /// destinations absent from the current macOS installation.
-    private func declaredDestinationIdentifiers() -> Set<String> {
-        let resources = systemSettingsURL.appending(path: "Contents/Resources", directoryHint: .isDirectory)
-        let generalSettingsInfo = systemSettingsURL.appending(path: "Contents/PlugIns/GeneralSettings.appex/Contents/Info.plist")
-        return [resources.appending(path: "Sidebar.plist"), generalSettingsInfo].reduce(into: []) { identifiers, url in
-            guard let data = try? Data(contentsOf: url),
-                  let propertyList = try? PropertyListSerialization.propertyList(from: data, format: nil) else { return }
-            collectStrings(in: propertyList, into: &identifiers)
-        }
+    static var supportedPanes: [SystemSettingsPane] {
+        SystemSettingsReference.panes(for: ProcessInfo.processInfo.operatingSystemVersion.majorVersion)
     }
-
-    private func collectStrings(in value: Any, into strings: inout Set<String>) {
-        switch value {
-        case let string as String:
-            strings.insert(string)
-        case let array as [Any]:
-            array.forEach { collectStrings(in: $0, into: &strings) }
-        case let dictionary as [String: Any]:
-            dictionary.values.forEach { collectStrings(in: $0, into: &strings) }
-        default:
-            break
-        }
-    }
-
-    // These are System Settings' stable, public URL-scheme destinations on macOS 13+. 
-    static let supportedPanes = [
-        SystemSettingsPane(name: "About", identifier: "com.apple.SystemProfiler.AboutExtension"),
-        SystemSettingsPane(name: "Accessibility", identifier: "com.apple.Accessibility-Settings.extension"),
-        SystemSettingsPane(name: "Appearance", identifier: "com.apple.Appearance-Settings.extension"),
-        SystemSettingsPane(name: "Apple Account", identifier: "com.apple.systempreferences.AppleIDSettings"),
-        SystemSettingsPane(name: "Battery", identifier: "com.apple.Battery-Settings.extension"),
-        SystemSettingsPane(name: "Bluetooth", identifier: "com.apple.BluetoothSettings"),
-        SystemSettingsPane(name: "CDs & DVDs", identifier: "com.apple.CD-DVD-Settings.extension"),
-        SystemSettingsPane(name: "Control Center", identifier: "com.apple.ControlCenter-Settings.extension"),
-        SystemSettingsPane(name: "Desktop & Dock", identifier: "com.apple.Desktop-Settings.extension"),
-        SystemSettingsPane(name: "Displays", identifier: "com.apple.Displays-Settings.extension"),
-        SystemSettingsPane(name: "Family", identifier: "com.apple.Family-Settings.extension"),
-        SystemSettingsPane(name: "Focus", identifier: "com.apple.Focus-Settings.extension"),
-        SystemSettingsPane(name: "Game Center", identifier: "com.apple.Game-Center-Settings.extension"),
-        SystemSettingsPane(name: "Game Controllers", identifier: "com.apple.Game-Controller-Settings.extension"),
-        SystemSettingsPane(name: "General", identifier: "com.apple.systempreferences.GeneralSettings"),
-        SystemSettingsPane(name: "Internet Accounts", identifier: "com.apple.Internet-Accounts-Settings.extension"),
-        SystemSettingsPane(name: "Keyboard", identifier: "com.apple.Keyboard-Settings.extension"),
-        SystemSettingsPane(name: "Lock Screen", identifier: "com.apple.Lock-Screen-Settings.extension"),
-        SystemSettingsPane(name: "Login Items & Extensions", identifier: "com.apple.LoginItems-Settings.extension"),
-        SystemSettingsPane(name: "Mouse", identifier: "com.apple.Mouse-Settings.extension"),
-        SystemSettingsPane(name: "Network", identifier: "com.apple.Network-Settings.extension"),
-        SystemSettingsPane(name: "Notifications", identifier: "com.apple.Notifications-Settings.extension"),
-        SystemSettingsPane(name: "Passwords", identifier: "com.apple.Passwords-Settings.extension"),
-        SystemSettingsPane(name: "Privacy & Security", identifier: "com.apple.settings.PrivacySecurity.extension"),
-        SystemSettingsPane(name: "Printers & Scanners", identifier: "com.apple.Print-Scan-Settings.extension"),
-        SystemSettingsPane(name: "Screen Time", identifier: "com.apple.Screen-Time-Settings.extension"),
-        SystemSettingsPane(name: "Siri", identifier: "com.apple.Siri-Settings.extension"),
-        SystemSettingsPane(name: "Sound", identifier: "com.apple.Sound-Settings.extension"),
-        SystemSettingsPane(name: "Spotlight", identifier: "com.apple.Spotlight-Settings.extension"),
-        SystemSettingsPane(name: "Touch ID & Password", identifier: "com.apple.Touch-ID-Settings.extension"),
-        SystemSettingsPane(name: "Trackpad", identifier: "com.apple.Trackpad-Settings.extension"),
-        SystemSettingsPane(name: "Users & Groups", identifier: "com.apple.Users-Groups-Settings.extension"),
-        SystemSettingsPane(name: "Wallet & Apple Pay", identifier: "com.apple.WalletSettingsExtension"),
-        SystemSettingsPane(name: "Wallpaper", identifier: "com.apple.Wallpaper-Settings.extension"),
-        SystemSettingsPane(name: "Wi-Fi", identifier: "com.apple.wifi-settings-extension"),
-    ]
 }
 
 extension SystemSettingsPane: LauncherSearchable {

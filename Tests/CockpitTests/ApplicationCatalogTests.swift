@@ -68,8 +68,51 @@ final class ApplicationCatalogTests: XCTestCase {
         }
     }
 
+    func testInstalledSystemSettingsCatalogKeepsDisplaysWiFiAndBluetoothSearchable() {
+        let panes = SystemSettingsPaneCatalog().panes()
+        for (query, identifier) in [
+            ("display", "com.apple.Displays-Settings.extension"),
+            ("wifi", "com.apple.wifi-settings-extension"),
+            ("bluetooth", "com.apple.BluetoothSettings"),
+        ] {
+            XCTAssertTrue(ApplicationSearch().ranked(panes, for: query).contains { $0.identifier == identifier }, "Missing setting for \(query)")
+        }
+    }
+
+    func testCatalogMatchesEveryAuditedAlfredEntryWithoutPrivateApplePlists() throws {
+        struct ReferencePane: Decodable {
+            let name: String
+            let url: String
+            let icon: String
+        }
+        let fixtureURL = try XCTUnwrap(Bundle.module.url(forResource: "alfred-system-settings", withExtension: "json", subdirectory: "Fixtures"))
+        let reference = try JSONDecoder().decode([String: [ReferencePane]].self, from: Data(contentsOf: fixtureURL))
+        let root = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        for version in [13, 14, 15, 26, 27] {
+            let expected = try XCTUnwrap(reference[String(min(version, 26))])
+            let panes = SystemSettingsPaneCatalog(systemSettingsURL: root, macOSMajorVersion: version).panes()
+            XCTAssertEqual(panes.map(\.name), expected.map(\.name), "macOS \(version) names/order")
+            XCTAssertEqual(panes.map { $0.destinationURL.absoluteString }, expected.map(\.url), "macOS \(version) destinations")
+            XCTAssertEqual(Set(panes.map(\.id)).count, panes.count, "macOS \(version) duplicate identities")
+            for (pane, entry) in zip(panes, expected) {
+                XCTAssertEqual(pane.iconBundlePath, entry.icon.hasPrefix("__customicon") ? nil : entry.icon)
+            }
+        }
+    }
+
+    func testCatalogRetainsPanesWhenPrivateApplePlistsAreMalformed() throws {
+        let root = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let resources = root.appending(path: "Contents/Resources")
+        try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
+        try "not a plist".write(to: resources.appending(path: "Sidebar.plist"), atomically: true, encoding: .utf8)
+        XCTAssertEqual(SystemSettingsPaneCatalog(systemSettingsURL: root, macOSMajorVersion: 26).panes().count, 46)
+    }
+
     func testSystemSettingsPaneCatalogIncludesReferencePanes() {
-        let panes = SystemSettingsPaneCatalog.supportedPanes
+        let panes = SystemSettingsReference.panes(for: 26)
 
         XCTAssertTrue(panes.contains { $0.name == "About" })
         XCTAssertTrue(panes.contains { $0.name == "Accessibility" })
@@ -77,7 +120,7 @@ final class ApplicationCatalogTests: XCTestCase {
         XCTAssertTrue(panes.contains { $0.name == "Login Items & Extensions" })
         XCTAssertTrue(panes.contains { $0.name == "Bluetooth" })
         XCTAssertTrue(panes.contains { $0.name == "Privacy & Security" })
-        XCTAssertTrue(panes.contains { $0.name == "Wi-Fi" })
+        XCTAssertTrue(panes.contains { $0.name == "Wi‑Fi" })
     }
 
     private func makeTemporaryDirectory() throws -> URL {

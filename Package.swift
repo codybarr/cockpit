@@ -12,6 +12,6 @@ let package = Package(
             name: "Cockpit",
             linkerSettings: [.linkedFramework("AppKit"), .linkedFramework("Carbon"), .linkedFramework("ServiceManagement"), .linkedLibrary("sqlite3")]
         ),
-        .testTarget(name: "CockpitTests", dependencies: ["Cockpit"]),
+        .testTarget(name: "CockpitTests", dependencies: ["Cockpit"], resources: [.copy("Fixtures")]),
     ]
 )
