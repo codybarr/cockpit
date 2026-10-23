@@ -14,7 +14,7 @@ struct SystemSettingsPane: Equatable, Sendable, Identifiable {
         case "com.apple.Accessibility-Settings.extension": .init(symbolName: "accessibility", color: .blue)
         case "com.apple.Appearance-Settings.extension": .init(symbolName: "circle.lefthalf.filled", color: .gray)
         case "com.apple.systempreferences.AppleIDSettings": .init(symbolName: "person.crop.circle.fill", color: .gray)
-        case "com.apple.Battery-Settings.extension": .init(symbolName: "battery.100percent", color: .green)
+        case "com.apple.Battery-Settings.extension": .init(symbolName: "battery.100percent", color: .green, background: .dark)
         case "com.apple.BluetoothSettings": .init(symbolName: "antenna.radiowaves.left.and.right", color: .blue, resourcePath: "/System/Library/PrivateFrameworks/CoreBluetoothUI.framework/Versions/A/Resources/Bluetooth.icns")
         case "com.apple.CD-DVD-Settings.extension": .init(symbolName: "opticaldisc.fill", color: .gray)
         case "com.apple.ControlCenter-Settings.extension": .init(symbolName: identifier.hasSuffix("*menubar") ? "menubar.rectangle" : "switch.2", color: .gray)
@@ -50,15 +50,18 @@ struct SystemSettingsPane: Equatable, Sendable, Identifiable {
 
 struct SystemSettingsPaneIcon: Sendable {
     enum Color: Sendable { case blue, cyan, green, gray, indigo, red }
+    enum Background: Sendable { case standard, dark }
 
     let symbolName: String
     let color: Color
     let resourcePath: String?
+    let background: Background
 
-    init(symbolName: String, color: Color, resourcePath: String? = nil) {
+    init(symbolName: String, color: Color, resourcePath: String? = nil, background: Background = .standard) {
         self.symbolName = symbolName
         self.color = color
         self.resourcePath = resourcePath
+        self.background = background
     }
 }
 

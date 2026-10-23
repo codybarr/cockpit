@@ -472,7 +472,7 @@ private struct LauncherResultRow: View {
                 Spacer()
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 13)
+            .padding(.horizontal, 11)
             .frame(height: 60)
             .background {
                 RoundedRectangle(cornerRadius: 0)
@@ -487,16 +487,31 @@ private struct LauncherResultRow: View {
     private var resultIcon: some View {
         switch result {
         case let .application(application):
-            Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
+            Image(nsImage: LauncherIcon.image(forFile: application.url.path))
                 .resizable()
+                .scaledToFit()
         case let .systemSettingsPane(pane):
             if let iconBundlePath = pane.iconBundlePath, FileManager.default.fileExists(atPath: iconBundlePath) {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: iconBundlePath))
+                Image(nsImage: LauncherIcon.image(forFile: iconBundlePath))
                     .resizable()
+                    .scaledToFit()
             } else {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.white.opacity(0.10))
+                    if pane.icon.background == .dark {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(LinearGradient(
+                                colors: [Color(white: 0.10), Color(white: 0.025)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .strokeBorder(.white.opacity(0.10), lineWidth: 0.5)
+                            }
+                    } else {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.white.opacity(0.10))
+                    }
                     if let resourcePath = pane.icon.resourcePath, let image = NSImage(contentsOfFile: resourcePath) {
                         Image(nsImage: image)
                             .resizable()
@@ -510,8 +525,9 @@ private struct LauncherResultRow: View {
                 }
             }
         case let .file(file):
-            Image(nsImage: NSWorkspace.shared.icon(forFile: file.url.path))
+            Image(nsImage: LauncherIcon.image(forFile: file.url.path))
                 .resizable()
+                .scaledToFit()
         case let .systemAction(action):
             Image(systemName: action.symbolName)
                 .font(.system(size: 26))
