@@ -1,4 +1,4 @@
-import ApplicationServices
+import Darwin
 import Foundation
 
 enum SystemAction: String, CaseIterable, Equatable, Sendable, Identifiable {
@@ -44,32 +44,34 @@ protocol ScreenLocking: AnyObject {
 }
 
 @MainActor
-final class AccessibilityScreenLocker: ScreenLocking {
+final class MacOSScreenLocker: ScreenLocking {
     func lockScreen() throws {
-        guard AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary) else {
-            throw ScreenLockError.accessibilityPermissionDenied
+        // Deliberate private-API exception: avoids synthetic input and Accessibility consent.
+        // Resolve at runtime so an OS change fails this action rather than preventing launch.
+        let library = "/System/Library/PrivateFrameworks/login.framework/Versions/Current/login"
+        guard let handle = dlopen(library, RTLD_NOW | RTLD_LOCAL) else {
+            throw ScreenLockError.unavailable
         }
-
-        let source = CGEventSource(stateID: .hidSystemState)
-        for isKeyDown in [true, false] {
-            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 12, keyDown: isKeyDown) else {
-                throw ScreenLockError.unavailable
-            }
-            event.flags = [.maskCommand, .maskControl]
-            event.post(tap: .cghidEventTap)
+        defer { dlclose(handle) }
+        guard let address = dlsym(handle, "SACLockScreenImmediate") else {
+            throw ScreenLockError.unavailable
         }
+        typealias LockFunction = @convention(c) () -> Int32
+        let lock = unsafeBitCast(address, to: LockFunction.self)
+        let status = lock()
+        guard status == 0 else { throw ScreenLockError.failed(status) }
     }
 
     private enum ScreenLockError: LocalizedError {
-        case accessibilityPermissionDenied
         case unavailable
+        case failed(Int32)
 
         var errorDescription: String? {
             switch self {
-            case .accessibilityPermissionDenied:
-                "Cockpit needs Accessibility permission to lock the screen. Grant it in System Settings, then run Lock again."
             case .unavailable:
-                "macOS could not prepare the lock shortcut."
+                "Screen locking is unavailable on this macOS version."
+            case let .failed(status):
+                "macOS could not lock the screen (error \(status))."
             }
         }
     }
@@ -79,7 +81,7 @@ final class AccessibilityScreenLocker: ScreenLocking {
 final class MacOSSystemActionExecutor: SystemActionExecuting {
     private let screenLocker: any ScreenLocking
 
-    init(screenLocker: any ScreenLocking = AccessibilityScreenLocker()) {
+    init(screenLocker: any ScreenLocking = MacOSScreenLocker()) {
         self.screenLocker = screenLocker
     }
 
