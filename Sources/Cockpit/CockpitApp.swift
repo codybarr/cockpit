@@ -80,9 +80,14 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         }
     }
 
+    static var menuBarIconURL: URL? {
+        Bundle.main.url(forResource: "CockpitMenuBarTemplate", withExtension: "png")
+            ?? Bundle.module.url(forResource: "CockpitMenuBarTemplate", withExtension: "png")
+    }
+
     private func installStatusItem() {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let imageURL = Bundle.main.url(forResource: "CockpitMenuBarTemplate", withExtension: "png"),
+        if let imageURL = Self.menuBarIconURL,
            let image = NSImage(contentsOf: imageURL) {
             image.size = NSSize(width: 18, height: 18)
             image.isTemplate = true
@@ -530,7 +535,7 @@ private struct LauncherResultRow: View {
     private var subtitle: String {
         switch result {
         case let .application(application):
-            isRevealHintVisible ? "Reveal file in Finder" : application.url.path
+            isRevealHintVisible ? "Reveal file in Finder" : application.displayURL.path
         case .systemSettingsPane:
             "System Settings"
         case let .file(file):

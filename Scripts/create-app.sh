@@ -8,7 +8,7 @@ app=${2:?Usage: Scripts/create-app.sh VERSION APP_PATH}
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$root/Assets/Cockpit.icns" "$app/Contents/Resources/Cockpit.icns"
-cp "$root/Assets/CockpitMenuBarTemplate.png" "$app/Contents/Resources/CockpitMenuBarTemplate.png"
+cp "$root/Sources/Cockpit/Resources/CockpitMenuBarTemplate.png" "$app/Contents/Resources/CockpitMenuBarTemplate.png"
 (
   cd "$root"
   swift build -c release

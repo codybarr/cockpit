@@ -33,7 +33,7 @@ Scripts/install-local.sh /tmp/Cockpit.app
 > which Xcode can create from a free Apple ID. Notarization is not required for
 > the local build.
 
-Press **Option-Space** to show the Launcher by default. Use Cockpit’s menu-bar icon to choose **Settings…**, configure Launch at Login or select **Ctrl+Space**, **Alt+Space**, or **Cmd+Space**, or to show or quit the app. Cockpit searches the standard application locations (`/Applications`, `/System/Applications`, and `~/Applications`) without Spotlight, alongside Lock, Restart, and Shut Down System actions. Select a result and press Return to open the application or run the System action.
+Press **Option-Space** to show the Launcher by default. Use Cockpit’s menu-bar icon to choose **Settings…**, configure Launch at Login or select **Ctrl+Space**, **Alt+Space**, or **Cmd+Space**, or to show or quit the app. Cockpit searches `/Applications`, `/System/Applications`, `~/Applications`, the user-facing utilities in `/System/Library/CoreServices/Applications`, and the system Cryptex application location (including Safari) without Spotlight, alongside Lock, Restart, and Shut Down System actions. It also discovers tools in application bundles’ `Contents/Applications` and `Contents/Developer/Applications` directories, without exposing arbitrary bundle helpers. Overlapping locations and symlinks to the same application produce one result, using its native macOS icon. Select a result and press Return to open the application or run the System action.
 
 ## Performance acceptance benchmarks
 

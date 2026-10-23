@@ -26,4 +26,6 @@ for spec in \
 done
 
 iconutil --convert icns "$iconset" --output "$assets/Cockpit.icns"
-sips -s format png -z 72 72 "$menuBarMaster" --out "$assets/CockpitMenuBarTemplate.png" >/dev/null
+resources="$root/Sources/Cockpit/Resources"
+mkdir -p "$resources"
+sips -s format png -z 72 72 "$menuBarMaster" --out "$resources/CockpitMenuBarTemplate.png" >/dev/null

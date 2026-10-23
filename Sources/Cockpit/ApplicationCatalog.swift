@@ -5,14 +5,16 @@ struct ApplicationCandidate: Equatable, Sendable, Identifiable {
     let url: URL
     let iconCacheKey: String
     let normalizedName: String
+    let displayURL: URL
 
     var id: URL { url }
 
-    init(name: String, url: URL, iconCacheKey: String? = nil) {
+    init(name: String, url: URL, iconCacheKey: String? = nil, displayURL: URL? = nil) {
         self.name = name
         self.url = url
         self.iconCacheKey = iconCacheKey ?? url.path
         normalizedName = SearchNormalizer.normalize(name)
+        self.displayURL = displayURL ?? url
     }
 }
 
@@ -29,22 +31,45 @@ struct ApplicationCatalog: ApplicationCataloging {
 
     func scan() throws -> [ApplicationCandidate] {
         var applications = includesFinder ? [Self.finder] : []
+        var seen = Set(applications.map { $0.url.path })
+        var visitedRoots: Set<String> = []
 
-        for root in roots where fileManager.fileExists(atPath: root.path) {
+        func scanRoot(_ root: URL) {
+            guard fileManager.fileExists(atPath: root.path),
+                  visitedRoots.insert(root.resolvingSymlinksInPath().path).inserted else { return }
             guard let enumerator = fileManager.enumerator(
                 at: root,
                 includingPropertiesForKeys: [.isDirectoryKey, .isPackageKey],
                 options: [.skipsHiddenFiles, .skipsPackageDescendants]
-            ) else { continue }
+            ) else { return }
 
             for case let url as URL in enumerator where url.pathExtension.caseInsensitiveCompare("app") == .orderedSame {
                 let canonicalURL = url.resolvingSymlinksInPath()
-                applications.append(ApplicationCandidate(name: displayName(for: canonicalURL), url: canonicalURL))
                 enumerator.skipDescendants()
+                guard seen.insert(canonicalURL.path).inserted else { continue }
+                applications.append(ApplicationCandidate(
+                    name: displayName(for: canonicalURL), url: canonicalURL,
+                    displayURL: Self.displayURL(for: canonicalURL)
+                ))
+                // Only these bundle directories contain user-facing embedded applications.
+                for path in ["Contents/Applications", "Contents/Developer/Applications"] {
+                    scanRoot(canonicalURL.appending(path: path))
+                }
             }
         }
+        roots.forEach(scanRoot)
 
         return applications.sorted { $0.url.path.localizedStandardCompare($1.url.path) == .orderedAscending }
+    }
+
+    static func displayURL(
+        for url: URL,
+        applicationsDirectory: URL = URL(fileURLWithPath: "/Applications", isDirectory: true)
+    ) -> URL {
+        let alias = applicationsDirectory.appending(path: url.lastPathComponent)
+        guard FileManager.default.fileExists(atPath: alias.path),
+              alias.resolvingSymlinksInPath().path == url.resolvingSymlinksInPath().path else { return url }
+        return alias
     }
 
     private func displayName(for url: URL) -> String {
@@ -59,6 +84,8 @@ struct ApplicationCatalog: ApplicationCataloging {
     static let standardRoots = [
         URL(fileURLWithPath: "/Applications", isDirectory: true),
         URL(fileURLWithPath: "/System/Applications", isDirectory: true),
+        URL(fileURLWithPath: "/System/Library/CoreServices/Applications", isDirectory: true),
+        URL(fileURLWithPath: "/System/Volumes/Preboot/Cryptexes/App/System/Applications", isDirectory: true),
         FileManager.default.homeDirectoryForCurrentUser.appending(path: "Applications", directoryHint: .isDirectory),
     ]
 }

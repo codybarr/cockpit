@@ -10,6 +10,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Cockpit",
+            resources: [.copy("Resources/CockpitMenuBarTemplate.png")],
             linkerSettings: [.linkedFramework("AppKit"), .linkedFramework("Carbon"), .linkedFramework("ServiceManagement"), .linkedLibrary("sqlite3")]
         ),
         .testTarget(name: "CockpitTests", dependencies: ["Cockpit"], resources: [.copy("Fixtures")]),
