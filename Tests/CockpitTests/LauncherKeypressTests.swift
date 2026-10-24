@@ -55,6 +55,10 @@ final class LauncherKeypressTests: XCTestCase {
         XCTAssertEqual(replacementModes, [false])
     }
 
+    func testSpaceReplacesSelectedClipboardQueryWhenFilenameSearchIsUnavailable() {
+        XCTAssertTrue(LauncherSpaceKeypress.shouldPassThrough(isLaunchpadTextFullySelected: true) { _ in false })
+    }
+
     func testSpaceStartsFilenameSearchWhenTheLaunchpadIsEmptyOrSelected() {
         var replacementModes: [Bool] = []
 

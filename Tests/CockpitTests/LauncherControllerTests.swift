@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import SwiftUI
 import XCTest
 @testable import Cockpit
 
@@ -110,7 +112,7 @@ final class LauncherControllerTests: XCTestCase {
 
         controller.updateQuery("'report")
         XCTAssertEqual(controller.state.results.count, 7)
-        XCTAssertEqual(controller.state.contentHeight, 440)
+        XCTAssertEqual(controller.state.contentHeight, 450)
 
         controller.updateQuery("")
 
@@ -360,6 +362,264 @@ final class LauncherControllerTests: XCTestCase {
         XCTAssertFalse(controller.state.isVisible)
     }
 
+    func testClipboardCommandOpensTheExistingLauncherAndCopiesWithoutReordering() async throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let pb = NSPasteboard.withUniqueName()
+        defer { pb.releaseGlobally() }
+        let history = ClipboardHistory(directory: directory, pasteboard: pb, monitorsAutomatically: false)
+        await history.load()
+        history.setEnabled(true)
+        for text in ["older", "Newest\nfull text"] {
+            pb.clearContents()
+            pb.setString(text, forType: .string)
+            await history.capture()
+        }
+        let controller = makeController(catalog: StubCatalog(applications: []), clipboardHistory: history)
+        controller.invoke()
+        controller.updateQuery("clipboard")
+        XCTAssertEqual(controller.state.selectedResult, .clipboardHistory)
+        controller.executeSelectedResult()
+        XCTAssertEqual(controller.state.context, .clipboard)
+        XCTAssertEqual(controller.state.query, "")
+        XCTAssertEqual(controller.state.results.count, 2)
+        XCTAssertEqual(controller.state.contentHeight, 202)
+        if ProcessInfo.processInfo.environment["COCKPIT_CAPTURE_UI"] == "1" {
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 680, height: controller.state.contentHeight), styleMask: [.borderless], backing: .buffered, defer: false)
+            window.contentView = NSHostingView(rootView: LauncherView(controller: controller))
+            window.orderFront(nil)
+            defer { window.orderOut(nil) }
+            try await Task.sleep(for: .milliseconds(150))
+            let view = try XCTUnwrap(window.contentView)
+            view.layoutSubtreeIfNeeded()
+            let bitmap = try XCTUnwrap(view.bitmapImageRepForCachingDisplay(in: view.bounds))
+            view.cacheDisplay(in: view.bounds, to: bitmap)
+            try bitmap.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "/tmp/cockpit-clipboard-launcher.png"))
+        }
+        controller.moveSelection(by: 1)
+        controller.executeSelectedResult()
+        for _ in 0..<100 where controller.state.isVisible { try await Task.sleep(for: .milliseconds(5)) }
+        XCTAssertFalse(controller.state.isVisible)
+        XCTAssertEqual(pb.string(forType: .string), "older")
+        XCTAssertEqual(history.entries.map(\.plainText), ["Newest\nfull text", "older"])
+        controller.invoke()
+        XCTAssertEqual(controller.state.context, .standard)
+        XCTAssertTrue(controller.state.results.isEmpty)
+    }
+
+    func testClipboardContextTreatsSpacesAndApostrophesAsLiteralInput() async throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let pb = NSPasteboard.withUniqueName()
+        defer { pb.releaseGlobally() }
+        let history = ClipboardHistory(directory: directory, pasteboard: pb, monitorsAutomatically: false)
+        await history.load()
+        history.setEnabled(true)
+        pb.clearContents()
+        pb.setString("'a literal value", forType: .string)
+        await history.capture()
+        let controller = makeController(catalog: StubCatalog(applications: []), clipboardHistory: history)
+        controller.invoke()
+        controller.updateQuery("clipboard")
+        controller.executeSelectedResult()
+        XCTAssertFalse(controller.startFilenameSearch(replacingExistingQuery: true))
+        controller.updateQuery("'A LITERAL")
+        for _ in 0..<100 where controller.state.results.isEmpty { try await Task.sleep(for: .milliseconds(5)) }
+        XCTAssertEqual(controller.state.query, "'A LITERAL")
+        // Wait for the asynchronous clipboard-only filter to publish.
+        try await Task.sleep(for: .milliseconds(30))
+        XCTAssertEqual(controller.state.results.count, 1)
+        controller.updateQuery(" ")
+        XCTAssertEqual(controller.state.query, " ")
+        controller.updateQuery("definitely not in history")
+        controller.executeSelectedResult()
+        try await Task.sleep(for: .milliseconds(30))
+        XCTAssertTrue(controller.state.isVisible, "A new query must not execute the previous query’s selection")
+        XCTAssertTrue(controller.state.results.isEmpty)
+    }
+
+    func testClipboardSelectionFollowsEntryIdentityAcrossExternalCopiesAndClear() async throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let pb = NSPasteboard.withUniqueName()
+        defer { pb.releaseGlobally() }
+        let history = ClipboardHistory(directory: directory, pasteboard: pb, monitorsAutomatically: false)
+        await history.load()
+        history.setEnabled(true)
+        for text in ["A", "B"] {
+            pb.clearContents()
+            pb.setString(text, forType: .string)
+            await history.capture()
+        }
+        let controller = makeController(catalog: StubCatalog(applications: []), clipboardHistory: history)
+        controller.invoke()
+        controller.updateQuery("clipboard")
+        controller.executeSelectedResult()
+        controller.moveSelection(by: 1)
+        let selectedID = controller.state.selectedResult?.id
+        pb.clearContents()
+        pb.setString("C", forType: .string)
+        await history.capture()
+        try await Task.sleep(for: .milliseconds(20))
+        XCTAssertEqual(controller.state.selectedResult?.id, selectedID)
+        XCTAssertEqual(controller.state.selectedIndex, 2)
+        await history.clear()
+        try await Task.sleep(for: .milliseconds(20))
+        XCTAssertNil(controller.state.selectedResult)
+        XCTAssertEqual(controller.state.emptyMessage, "Clipboard history is empty.")
+        XCTAssertEqual(controller.state.contentHeight, 128)
+        history.setEnabled(false)
+        try await Task.sleep(for: .milliseconds(20))
+        controller.invoke()
+        controller.updateQuery("clipboard")
+        XCTAssertTrue(controller.state.results.isEmpty)
+    }
+
+    func testClipboardAlternateActionCopiesPathsButDoesNothingForAnImage() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let file = root.appending(path: "example.txt")
+        try Data("original".utf8).write(to: file)
+        let pb = NSPasteboard.withUniqueName()
+        defer { pb.releaseGlobally() }
+        let history = ClipboardHistory(directory: root.appending(path: "history"), pasteboard: pb, monitorsAutomatically: false, volatileRoots: [])
+        await history.load()
+        history.setEnabled(true)
+        pb.clearContents()
+        pb.writeObjects([file as NSURL])
+        await history.capture()
+        let controller = makeController(catalog: StubCatalog(applications: []), clipboardHistory: history)
+        controller.invoke()
+        controller.updateQuery("clipboard")
+        controller.executeSelectedResult()
+        controller.revealSelectedResult()
+        for _ in 0..<100 where controller.state.isVisible { try await Task.sleep(for: .milliseconds(5)) }
+        XCTAssertFalse(controller.state.isVisible)
+        XCTAssertEqual(pb.string(forType: .string), file.path)
+        XCTAssertFalse(pb.types?.contains(.fileURL) ?? false)
+        let bitmap = try XCTUnwrap(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 4, pixelsHigh: 3, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        pb.clearContents()
+        pb.setData(try XCTUnwrap(bitmap.representation(using: .png, properties: [:])), forType: .png)
+        await history.capture()
+        controller.invoke()
+        controller.updateQuery("clipboard")
+        controller.executeSelectedResult()
+        let count = pb.changeCount
+        controller.revealSelectedResult()
+        try await Task.sleep(for: .milliseconds(20))
+        XCTAssertTrue(controller.state.isVisible)
+        XCTAssertEqual(pb.changeCount, count)
+        controller.executeSelectedResult()
+        controller.dismiss() // Escape while the asynchronous copy is being prepared.
+        try await Task.sleep(for: .milliseconds(20))
+        XCTAssertEqual(pb.changeCount, count, "Dismissal must cancel a pending replay")
+    }
+
+    func testClipboardRowsFitWithoutScrollingWhenAllResultsFitInTheLauncher() async throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let pb = NSPasteboard.withUniqueName()
+        defer { pb.releaseGlobally() }
+        let history = ClipboardHistory(directory: directory, pasteboard: pb, monitorsAutomatically: false)
+        await history.load()
+        history.setEnabled(true)
+        for rowCount in [4, 6] { // The recording's four rows, and the six-row viewport boundary.
+            await history.clear()
+            for number in 1...rowCount {
+                pb.clearContents()
+                if rowCount == 4 && number < 4 { // Three images and text, like the recording.
+                    let bitmap = try XCTUnwrap(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: number * 10, pixelsHigh: 10, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+                    bitmap.bitmapData?.initialize(repeating: 0, count: bitmap.bytesPerRow * bitmap.pixelsHigh)
+                    pb.setData(try XCTUnwrap(bitmap.representation(using: .png, properties: [:])), forType: .png)
+                } else {
+                    pb.setString("Row \(number)", forType: .string)
+                }
+                await history.capture()
+            }
+            let controller = makeController(catalog: StubCatalog(applications: []), clipboardHistory: history)
+            controller.invoke()
+            controller.updateQuery("clipboard")
+            controller.executeSelectedResult()
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 680, height: controller.state.contentHeight), styleMask: [.borderless], backing: .buffered, defer: false)
+            window.contentView = NSHostingView(rootView: LauncherView(controller: controller))
+            window.orderFront(nil)
+            defer { window.orderOut(nil) }
+            try await Task.sleep(for: .milliseconds(100))
+            let scroll = try XCTUnwrap(findScrollView(in: try XCTUnwrap(window.contentView)))
+            let document = try XCTUnwrap(scroll.documentView)
+            XCTAssertLessThanOrEqual(document.frame.height, scroll.contentView.bounds.height + 0.5,
+                                     "\(rowCount) fixed-height rows must not overflow their viewport")
+            let origin = scroll.contentView.bounds.origin
+            controller.moveSelection(by: -1) // First → last, as in the recording.
+            try await Task.sleep(for: .milliseconds(50))
+            XCTAssertEqual(scroll.contentView.bounds.origin, origin, "Wrapping to the last row must not shift a fully visible list")
+            controller.moveSelection(by: 1)
+            try await Task.sleep(for: .milliseconds(50))
+            XCTAssertEqual(scroll.contentView.bounds.origin, origin)
+        }
+    }
+
+    func testClipboardSearchDoesNotPublishANoMatchesFrameBeforeFilteringCompletes() async throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let pb = NSPasteboard.withUniqueName()
+        defer { pb.releaseGlobally() }
+        let history = ClipboardHistory(directory: directory, pasteboard: pb, monitorsAutomatically: false)
+        await history.load()
+        history.setEnabled(true)
+        pb.clearContents()
+        pb.setString("Matching clipboard text", forType: .string)
+        await history.capture()
+        let controller = makeController(catalog: StubCatalog(applications: []), clipboardHistory: history)
+        controller.invoke()
+        controller.updateQuery("clipboard")
+        controller.executeSelectedResult()
+        var falseEmptyMessages = 0
+        let observer = controller.$state.sink { state in
+            if state.query == "matching", state.emptyMessage == "No matching results found." {
+                falseEmptyMessages += 1
+            }
+        }
+        defer { observer.cancel() }
+        let previousResults = controller.state.results
+        let previousHeight = controller.state.contentHeight
+        controller.updateQuery("matching")
+        XCTAssertTrue(controller.state.isSearching)
+        XCTAssertEqual(controller.state.results, previousResults)
+        XCTAssertEqual(controller.state.contentHeight, previousHeight, "The panel must not collapse while a filter is pending")
+        controller.executeSelectedResult()
+        controller.revealSelectedResult()
+        for _ in 0..<100 where controller.state.isSearching { try await Task.sleep(for: .milliseconds(5)) }
+        XCTAssertFalse(controller.state.isSearching)
+        XCTAssertTrue(controller.state.isVisible, "The previous results must not be executable while filtering")
+        XCTAssertEqual(controller.state.results.count, 1)
+        XCTAssertEqual(falseEmptyMessages, 0, "A matching query must never briefly announce no matches")
+
+        controller.updateQuery("no such entry")
+        XCTAssertNil(controller.state.emptyMessage)
+        XCTAssertEqual(controller.state.contentHeight, previousHeight)
+        for _ in 0..<100 where controller.state.isSearching { try await Task.sleep(for: .milliseconds(5)) }
+        XCTAssertFalse(controller.state.isSearching)
+        XCTAssertEqual(controller.state.emptyMessage, "No matching results found.")
+        XCTAssertEqual(controller.state.contentHeight, 128)
+
+        // Replacing a genuine no-match query must not announce that old outcome for
+        // the new query, including intermediate @Published state snapshots.
+        controller.updateQuery("matching")
+        XCTAssertNil(controller.state.emptyMessage)
+        XCTAssertEqual(controller.state.contentHeight, 128)
+        for _ in 0..<100 where controller.state.isSearching { try await Task.sleep(for: .milliseconds(5)) }
+        XCTAssertFalse(controller.state.isSearching)
+        XCTAssertEqual(controller.state.results.count, 1)
+        XCTAssertEqual(falseEmptyMessages, 0)
+    }
+
+    private func findScrollView(in view: NSView) -> NSScrollView? {
+        if let scroll = view as? NSScrollView { return scroll }
+        return view.subviews.lazy.compactMap { self.findScrollView(in: $0) }.first
+    }
+
     private func application(_ name: String) -> ApplicationCandidate {
         ApplicationCandidate(name: name, url: URL(fileURLWithPath: "/Applications/\(name).app"))
     }
@@ -375,7 +635,8 @@ final class LauncherControllerTests: XCTestCase {
         fileOpener: RecordingFileOpener = RecordingFileOpener(),
         fileRevealer: RecordingFileRevealer = RecordingFileRevealer(),
         calculationCopier: RecordingCalculationCopier = RecordingCalculationCopier(),
-        useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker()
+        useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker(),
+        clipboardHistory: ClipboardHistory? = nil
     ) -> LauncherController {
         LauncherController(
             catalog: catalog,
@@ -388,7 +649,8 @@ final class LauncherControllerTests: XCTestCase {
             fileOpener: fileOpener,
             fileRevealer: fileRevealer,
             calculationCopier: calculationCopier,
-            useTracker: useTracker
+            useTracker: useTracker,
+            clipboardHistory: clipboardHistory
         )
     }
 }

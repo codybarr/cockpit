@@ -79,12 +79,30 @@ final class PersistentApplicationUseTracker: ApplicationUseTracking {
     }
 }
 
+/// Shared by the native panel sizing and SwiftUI rows so gaps cannot create overflow.
+enum LauncherLayout {
+    static let launchpadHeight: CGFloat = 76
+    static let rowHeight: CGFloat = 60
+    static let rowSpacing: CGFloat = 2
+    static let resultsPadding: CGFloat = 2
+    static let visibleRowLimit = 6
+
+    static func resultsHeight(for count: Int) -> CGFloat {
+        let rows = min(count, visibleRowLimit)
+        guard rows > 0 else { return 0 }
+        return CGFloat(rows) * rowHeight + CGFloat(rows - 1) * rowSpacing + 2 * resultsPadding
+    }
+}
+
 struct LauncherState: Equatable {
+    enum Context: Equatable { case standard, clipboard }
+    var context: Context = .standard
     var isVisible = false
     var query = ""
     var results: [LauncherResult] = []
     var selectedIndex: Int?
     var isRevealHintVisible = false
+    var isSearching = false
     var errorMessage: String?
 
     var selectedResult: LauncherResult? {
@@ -92,12 +110,17 @@ struct LauncherState: Equatable {
         return results[selectedIndex]
     }
 
+    var emptyMessage: String? {
+        guard !isSearching, results.isEmpty else { return nil }
+        if context == .clipboard && query.isEmpty { return "Clipboard history is empty." }
+        return query.isEmpty ? nil : "No matching results found."
+    }
+
     var contentHeight: CGFloat {
-        if errorMessage != nil || (!query.isEmpty && results.isEmpty) {
+        if errorMessage != nil || emptyMessage != nil || (isSearching && results.isEmpty) {
             return 128
         }
-        guard !results.isEmpty else { return 76 }
-        return 76 + min(CGFloat(results.count) * 60 + 4, 364)
+        return LauncherLayout.launchpadHeight + LauncherLayout.resultsHeight(for: results.count)
     }
 }
 
@@ -115,6 +138,13 @@ final class LauncherController: ObservableObject {
     private let calculationCopier: any CalculationCopying
     private let useTracker: any ApplicationUseTracking
     private let search: ApplicationSearch
+    private let clipboardHistory: ClipboardHistory?
+    private var clipboardObserver: AnyCancellable?
+    private var clipboardSearchTask: Task<Void, Never>?
+    private var clipboardCopyTask: Task<Void, Never>?
+    private var clipboardCopyVersion = 0
+    private var clipboardSearchVersion = 0
+    private var clipboardStorageError: String?
     @Published private(set) var state = LauncherState()
 
     init(
@@ -129,7 +159,8 @@ final class LauncherController: ObservableObject {
         fileRevealer: any FileRevealing,
         calculationCopier: any CalculationCopying,
         useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker(),
-        search: ApplicationSearch = ApplicationSearch()
+        search: ApplicationSearch = ApplicationSearch(),
+        clipboardHistory: ClipboardHistory? = nil
     ) {
         self.catalog = catalog
         self.launcher = launcher
@@ -143,20 +174,49 @@ final class LauncherController: ObservableObject {
         self.calculationCopier = calculationCopier
         self.useTracker = useTracker
         self.search = search
+        self.clipboardHistory = clipboardHistory
+        clipboardObserver = clipboardHistory?.objectWillChange.sink { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if self.state.context == .clipboard {
+                    if self.clipboardHistory?.isEnabled == true {
+                        self.refreshClipboardResults(preservingSelection: true)
+                    } else {
+                        self.dismiss()
+                    }
+                }
+            }
+        }
     }
 
     func invoke() {
+        cancelClipboardWork()
         state = LauncherState(isVisible: true)
     }
 
     @discardableResult
     func startFilenameSearch(replacingExistingQuery: Bool = false) -> Bool {
-        guard state.query.isEmpty || replacingExistingQuery else { return false }
+        guard state.context == .standard, state.query.isEmpty || replacingExistingQuery else { return false }
         updateQuery("'")
         return true
     }
 
     func updateQuery(_ query: String) {
+        clipboardCopyVersion += 1
+        clipboardCopyTask?.cancel()
+        clipboardCopyTask = nil
+        if state.context == .clipboard {
+            // Keep the last rendered rows/height until the next query completes, but mark
+            // them non-executable. Publish query + pending status together so observers
+            // never mistake an unfinished filter for a completed empty result.
+            var nextState = state
+            nextState.query = query
+            nextState.isSearching = true
+            nextState.errorMessage = nil
+            state = nextState
+            refreshClipboardResults(preservingSelection: false)
+            return
+        }
         // A leading space begins filename search only when the Launchpad is
         // empty. Replacing a selected query is handled by LauncherPanel before
         // SwiftUI updates this binding, so a literal space remains literal here.
@@ -184,7 +244,8 @@ final class LauncherController: ObservableObject {
                 let applications = try catalog.scan().map(LauncherResult.application)
                 let panes = systemSettingsPaneCatalog.panes().map(LauncherResult.systemSettingsPane)
                 let systemActions = SystemAction.allCases.map(LauncherResult.systemAction)
-                state.results = search.ranked(applications + panes + systemActions, for: query) { result in
+                let commands: [LauncherResult] = clipboardHistory?.isEnabled == true ? [.clipboardHistory] : []
+                state.results = search.ranked(applications + panes + systemActions + commands, for: query) { result in
                     guard case let .application(application) = result else { return 0 }
                     return self.useTracker.score(for: application)
                 }
@@ -198,7 +259,69 @@ final class LauncherController: ObservableObject {
     }
 
     func dismiss() {
+        cancelClipboardWork()
         state = LauncherState()
+    }
+
+    private func cancelClipboardWork() {
+        clipboardSearchVersion += 1
+        clipboardSearchTask?.cancel()
+        clipboardCopyVersion += 1
+        clipboardCopyTask?.cancel()
+        clipboardCopyTask = nil
+    }
+
+    private func refreshClipboardResults(preservingSelection: Bool) {
+        guard let clipboardHistory, state.context == .clipboard else { return }
+        clipboardSearchVersion += 1
+        let version = clipboardSearchVersion
+        clipboardSearchTask?.cancel()
+        let query = state.query
+        let publish: ([ClipboardEntry]) -> Void = { [weak self] entries in
+            guard let self, self.clipboardSearchVersion == version,
+                  self.state.context == .clipboard else { return }
+            let selectedID = preservingSelection ? self.state.selectedResult?.id : nil
+            let previousIndex = preservingSelection ? (self.state.selectedIndex ?? 0) : 0
+            var nextState = self.state
+            nextState.results = entries.map(LauncherResult.clipboardEntry)
+            nextState.selectedIndex = nextState.results.firstIndex { $0.id == selectedID }
+                ?? (entries.isEmpty ? nil : min(previousIndex, entries.count - 1))
+            nextState.isSearching = false
+            if nextState.errorMessage == self.clipboardStorageError || clipboardHistory.errorMessage != nil {
+                nextState.errorMessage = clipboardHistory.errorMessage
+            }
+            self.clipboardStorageError = clipboardHistory.errorMessage
+            self.state = nextState
+        }
+        if query.isEmpty {
+            publish(clipboardHistory.entries)
+        } else {
+            state.isSearching = true
+            clipboardSearchTask = Task {
+                let entries = await clipboardHistory.search(query)
+                guard !Task.isCancelled else { return }
+                publish(entries)
+            }
+        }
+    }
+
+    private func copyClipboardEntry(_ entry: ClipboardEntry, plainText: Bool) {
+        guard clipboardCopyTask == nil, let clipboardHistory, !plainText || entry.plainText != nil else { return }
+        clipboardCopyVersion += 1
+        let version = clipboardCopyVersion
+        clipboardCopyTask = Task {
+            defer {
+                if clipboardCopyVersion == version { clipboardCopyTask = nil }
+            }
+            do {
+                try await clipboardHistory.copy(entry, plainText: plainText)
+                guard !Task.isCancelled else { return }
+                dismiss()
+            } catch {
+                guard !Task.isCancelled else { return }
+                state.errorMessage = "Cockpit could not copy this item: \(error.localizedDescription)"
+            }
+        }
     }
 
     func selectResult(at index: Int) {
@@ -219,10 +342,18 @@ final class LauncherController: ObservableObject {
     }
 
     func executeSelectedResult() {
-        guard let selectedResult = state.selectedResult else { return }
+        guard !state.isSearching, let selectedResult = state.selectedResult else { return }
 
         do {
             switch selectedResult {
+            case .clipboardHistory:
+                guard clipboardHistory?.isEnabled == true else { return }
+                state = LauncherState(context: .clipboard, isVisible: true)
+                refreshClipboardResults(preservingSelection: false)
+                return
+            case let .clipboardEntry(entry):
+                copyClipboardEntry(entry, plainText: false)
+                return
             case let .application(application):
                 try launcher.launch(application) { [weak self] result in
                     guard case .success = result else { return }
@@ -244,14 +375,17 @@ final class LauncherController: ObservableObject {
     }
 
     func revealSelectedResult() {
-        guard let selectedResult = state.selectedResult else { return }
+        guard !state.isSearching, let selectedResult = state.selectedResult else { return }
 
         do {
             switch selectedResult {
             case let .application(application): try revealer.reveal(application)
             case .systemSettingsPane: return
             case let .file(file): try fileRevealer.reveal(file)
-            case .systemAction, .calculation: return
+            case let .clipboardEntry(entry):
+                copyClipboardEntry(entry, plainText: true)
+                return
+            case .systemAction, .calculation, .clipboardHistory: return
             }
             dismiss()
         } catch {

@@ -16,6 +16,11 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
     private let systemSettingsPaneCatalog = SystemSettingsPaneCache()
     private let applicationUseTracker = PersistentApplicationUseTracker()
     private lazy var filenameIndex = try! FilenameIndex(databaseURL: Self.filenameIndexURL)
+    private let clipboardHistory = ClipboardHistory(
+        directory: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appending(path: "Cockpit/ClipboardHistory"),
+        defaults: .standard
+    )
     private lazy var launcherController = LauncherController(
         catalog: applicationCatalog,
         launcher: workspaceLauncher,
@@ -27,12 +32,14 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         fileOpener: workspaceLauncher,
         fileRevealer: workspaceLauncher,
         calculationCopier: calculationCopier,
-        useTracker: applicationUseTracker
+        useTracker: applicationUseTracker,
+        clipboardHistory: clipboardHistory
     )
     private var panelController: LauncherPanelController!
     private var hotkey: GlobalHotkey?
     private var statusItem: NSStatusItem?
     private var settingsWindowController: SettingsWindowController?
+    private var isTerminating = false
 
     private static var filenameIndexURL: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -48,6 +55,7 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Task { await clipboardHistory.load() }
         applicationCatalog.refreshInBackground()
         systemSettingsPaneCatalog.refreshInBackground()
         panelController = LauncherPanelController(controller: launcherController) { [weak self] in
@@ -56,6 +64,16 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         installStatusItem()
 
         _ = registerLauncherHotkey(launcherHotkeySettings.selectedHotkey)
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard !isTerminating else { return .terminateLater }
+        isTerminating = true
+        Task {
+            await clipboardHistory.shutDown()
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
 
     private func showLauncher() {
@@ -118,7 +136,8 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
             settingsWindowController = SettingsWindowController(
                 index: filenameIndex,
                 hotkeySettings: launcherHotkeySettings,
-                loginItemSettings: loginItemSettings
+                loginItemSettings: loginItemSettings,
+                clipboardHistory: clipboardHistory
             )
         }
         settingsWindowController?.show()
@@ -264,6 +283,10 @@ private final class LauncherPanelController {
         pendingResize?.cancel()
         let resize = DispatchWorkItem { [weak self] in
             guard let self else { return }
+            guard self.controller.state.isVisible else {
+                self.panel.orderOut(nil)
+                return
+            }
             self.resize(for: self.controller.state)
         }
         pendingResize = resize
@@ -387,44 +410,44 @@ struct LauncherSpaceKeypress {
         startFilenameSearch: (Bool) -> Bool
     ) -> Bool {
         if isLaunchpadTextFullySelected {
-            _ = startFilenameSearch(true)
-            return false
+            return !startFilenameSearch(true)
         }
         return !startFilenameSearch(false)
     }
 }
 
-private struct LauncherView: View {
+struct LauncherView: View {
     @ObservedObject var controller: LauncherController
     @FocusState private var isQueryFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            TextField("", text: Binding(
+            TextField(controller.state.context == .clipboard ? "Clipboard history" : "", text: Binding(
                 get: { controller.state.query },
                 set: { query in controller.updateQuery(query) }
             ))
             .focused($isQueryFocused)
             .textFieldStyle(.plain)
+            .accessibilityLabel("Launchpad")
             .font(.system(size: 42, weight: .regular))
             .foregroundStyle(.white)
             .padding(14)
-            .frame(height: 76)
+            .frame(height: LauncherLayout.launchpadHeight)
 
             if let errorMessage = controller.state.errorMessage {
                 Text(errorMessage)
                     .foregroundStyle(.red.opacity(0.9))
                     .padding(.horizontal, 20)
                     .frame(height: 48)
-            } else if !controller.state.query.isEmpty && controller.state.results.isEmpty {
-                Text("No matching results found.")
+            } else if let emptyMessage = controller.state.emptyMessage {
+                Text(emptyMessage)
                     .foregroundStyle(.white.opacity(0.62))
                     .padding(.horizontal, 20)
                     .frame(height: 48)
             } else if !controller.state.results.isEmpty {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack(spacing: 2) {
+                        LazyVStack(spacing: LauncherLayout.rowSpacing) {
                             ForEach(Array(controller.state.results.enumerated()), id: \.element.id) { index, result in
                                 LauncherResultRow(
                                     result: result,
@@ -437,7 +460,7 @@ private struct LauncherView: View {
                                 .id(result.id)
                             }
                         }
-                        .padding(2)
+                        .padding(LauncherLayout.resultsPadding)
                     }
                     .onChange(of: controller.state.selectedIndex) { _ in
                         guard let selectedResult = controller.state.selectedResult else { return }
@@ -465,7 +488,9 @@ private struct LauncherResultRow: View {
                     .frame(width: 38, height: 38)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(result.label).font(.system(size: 20, weight: .medium))
+                        .lineLimit(1)
                     Text(subtitle)
+                        .lineLimit(1)
                         .font(.system(size: 13))
                         .foregroundStyle(.white.opacity(0.56))
                 }
@@ -473,7 +498,7 @@ private struct LauncherResultRow: View {
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 11)
-            .frame(height: 60)
+            .frame(height: LauncherLayout.rowHeight)
             .background {
                 RoundedRectangle(cornerRadius: 0)
                     .fill(Color(red: 0.19, green: 0.40, blue: 0.55))
@@ -534,6 +559,16 @@ private struct LauncherResultRow: View {
         case .calculation:
             Image(systemName: "plus.forwardslash.minus")
                 .font(.system(size: 24))
+        case .clipboardHistory:
+            Image(systemName: "clipboard")
+                .font(.system(size: 26))
+        case let .clipboardEntry(entry):
+            if case let .image(_, _, _, thumbnail) = entry.content, let image = NSImage(data: thumbnail) {
+                Image(nsImage: image).resizable().scaledToFit()
+            } else {
+                Image(systemName: entry.isFileBatch ? "doc" : "doc.text")
+                    .font(.system(size: 26))
+            }
         }
     }
 
@@ -560,6 +595,10 @@ private struct LauncherResultRow: View {
             "System action"
         case .calculation:
             "Copy result"
+        case .clipboardHistory:
+            "Show recent copies"
+        case let .clipboardEntry(entry):
+            isRevealHintVisible && entry.plainText != nil ? "Copy as plain text" : entry.detail
         }
     }
 }

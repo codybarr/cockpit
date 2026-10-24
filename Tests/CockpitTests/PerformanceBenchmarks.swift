@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import XCTest
 @testable import Cockpit
@@ -39,7 +40,46 @@ final class PerformanceBenchmarks: XCTestCase {
         XCTAssertLessThanOrEqual(hotkeyP99, 0.050, "Hotkey-to-ready p99 must be at most 50 ms.")
     }
 
-    private func makeController(filenameIndex: any FilenameIndexing) -> LauncherController {
+    func testTwentyEntryClipboardQueryAndSelectionTargets() async throws {
+        guard ProcessInfo.processInfo.environment["COCKPIT_RUN_BENCHMARKS"] == "1" else {
+            throw XCTSkip("Set COCKPIT_RUN_BENCHMARKS=1 to run clipboard performance acceptance benchmarks.")
+        }
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let pb = NSPasteboard.withUniqueName()
+        defer { pb.releaseGlobally() }
+        let history = ClipboardHistory(directory: root, pasteboard: pb, monitorsAutomatically: false)
+        await history.load()
+        history.setEnabled(true)
+        for index in 1...20 {
+            pb.clearContents()
+            pb.setString("Clipboard fixture entry \(index)\nA small paragraph of original text.", forType: .string)
+            await history.capture()
+        }
+        await history.flush()
+        let controller = makeController(filenameIndex: FixtureFilenameIndex(files: []), clipboardHistory: history)
+        controller.invoke()
+        controller.updateQuery("clipboard history")
+        controller.executeSelectedResult()
+        XCTAssertEqual(controller.state.results.count, 20)
+        let selectionSamples = samples(count: 30) { controller.moveSelection(by: 1) }
+        var querySamples: [TimeInterval] = []
+        for _ in 0..<30 {
+            let start = DispatchTime.now().uptimeNanoseconds
+            let matches = await history.search("fixture")
+            querySamples.append(Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000_000)
+            XCTAssertEqual(matches.count, 20)
+        }
+        querySamples.sort()
+        XCTAssertLessThanOrEqual(percentile(querySamples, 0.95), 0.016)
+        XCTAssertLessThanOrEqual(percentile(querySamples, 0.99), 0.033)
+        XCTAssertLessThanOrEqual(percentile(selectionSamples, 0.99), 0.016)
+        let hotkeySamples = samples(count: 30) { controller.invoke() }
+        XCTAssertLessThanOrEqual(percentile(hotkeySamples, 0.95), 0.033)
+        XCTAssertLessThanOrEqual(percentile(hotkeySamples, 0.99), 0.050)
+    }
+
+    private func makeController(filenameIndex: any FilenameIndexing, clipboardHistory: ClipboardHistory? = nil) -> LauncherController {
         LauncherController(
             catalog: EmptyCatalog(),
             launcher: NoopWorkspace(),
@@ -50,7 +90,8 @@ final class PerformanceBenchmarks: XCTestCase {
             filenameIndex: filenameIndex,
             fileOpener: NoopWorkspace(),
             fileRevealer: NoopWorkspace(),
-            calculationCopier: NoopWorkspace()
+            calculationCopier: NoopWorkspace(),
+            clipboardHistory: clipboardHistory
         )
     }
 

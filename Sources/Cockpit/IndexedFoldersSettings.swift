@@ -63,7 +63,8 @@ final class SettingsWindowController: NSWindowController {
     init(
         index: any FilenameIndexing,
         hotkeySettings: LauncherHotkeySettings,
-        loginItemSettings: LoginItemSettings = LoginItemSettings()
+        loginItemSettings: LoginItemSettings = LoginItemSettings(),
+        clipboardHistory: ClipboardHistory? = nil
     ) {
         self.loginItemSettings = loginItemSettings
         let window = NSWindow(
@@ -78,7 +79,8 @@ final class SettingsWindowController: NSWindowController {
         let hostingView = NSHostingView(rootView: SettingsView(
             indexedFoldersSettings: IndexedFoldersSettings(index: index),
             hotkeySettings: hotkeySettings,
-            loginItemSettings: loginItemSettings
+            loginItemSettings: loginItemSettings,
+            clipboardHistory: clipboardHistory
         ))
         hostingView.sizingOptions = []
         window.contentView = hostingView
@@ -99,9 +101,14 @@ private struct SettingsView: View {
     @ObservedObject var indexedFoldersSettings: IndexedFoldersSettings
     @ObservedObject var hotkeySettings: LauncherHotkeySettings
     @ObservedObject var loginItemSettings: LoginItemSettings
+    let clipboardHistory: ClipboardHistory?
     @State private var launchAtLoginError: String?
 
     var body: some View {
+        ScrollView { settingsContent }
+    }
+
+    private var settingsContent: some View {
         VStack(alignment: .leading, spacing: 16) {
             Toggle("Launch at Login", isOn: Binding(
                 get: { loginItemSettings.status == .enabled },
@@ -115,6 +122,11 @@ private struct SettingsView: View {
             Divider()
 
             LauncherHotkeyPicker(settings: hotkeySettings)
+
+            if let clipboardHistory {
+                Divider()
+                ClipboardHistorySettings(history: clipboardHistory)
+            }
 
             Divider()
 
@@ -138,6 +150,7 @@ private struct SettingsView: View {
                     }
                 }
             }
+            .frame(minHeight: 120)
             .listStyle(.plain)
             .overlay {
                 if indexedFoldersSettings.folders.isEmpty {

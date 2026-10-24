@@ -6,6 +6,8 @@ enum LauncherResult: Equatable, Sendable, Identifiable {
     case file(FilenameCandidate)
     case systemAction(SystemAction)
     case calculation(Calculation)
+    case clipboardHistory
+    case clipboardEntry(ClipboardEntry)
 
     var id: String {
         switch self {
@@ -14,6 +16,8 @@ enum LauncherResult: Equatable, Sendable, Identifiable {
         case let .file(file): "file:\(file.url.absoluteString)"
         case let .systemAction(action): "system-action:\(action.rawValue)"
         case let .calculation(calculation): "calculation:\(calculation.value)"
+        case .clipboardHistory: "clipboard-history"
+        case let .clipboardEntry(entry): "clipboard-entry:\(entry.id)"
         }
     }
 
@@ -24,6 +28,8 @@ enum LauncherResult: Equatable, Sendable, Identifiable {
         case let .file(file): file.name
         case let .systemAction(action): action.label
         case let .calculation(calculation): calculation.value
+        case .clipboardHistory: "Clipboard History"
+        case let .clipboardEntry(entry): entry.label
         }
     }
 }
@@ -56,7 +62,7 @@ extension LauncherResult: LauncherSearchable {
         case let .application(application): application.normalizedName
         case let .systemSettingsPane(pane): pane.normalizedSearchLabel
         case let .file(file): file.normalizedName
-        case .systemAction, .calculation: SearchNormalizer.normalize(label)
+        case .systemAction, .calculation, .clipboardHistory, .clipboardEntry: SearchNormalizer.normalize(label)
         }
     }
 
