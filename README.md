@@ -17,13 +17,15 @@ swift test
 swift run Cockpit
 ```
 
-To build a release executable and install it as an Apple Development–signed local app in `~/Applications`:
+To build a release executable and install it as an Apple Development–signed local app in `/Applications`:
 
 ```sh
 Scripts/install-local.sh
 ```
 
-Pass another writable app-bundle path to install elsewhere, for example:
+A successful install at the default location also removes the previous `~/Applications/Cockpit.app` copy after signing and verification.
+
+Pass another writable app-bundle path to install elsewhere without removing that copy, for example:
 
 ```sh
 Scripts/install-local.sh /tmp/Cockpit.app
