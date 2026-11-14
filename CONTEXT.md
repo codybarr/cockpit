@@ -24,6 +24,10 @@ _Avoid_: search index, Spotlight database
 The leading apostrophe (`'`) in a launcher query that explicitly switches Cockpit from its default application-and-system search to filename matching.
 _Avoid_: file mode toggle
 
+**Emoji prefix**:
+The leading colon (`:`) in a launcher query that switches Cockpit to matching its bundled emoji shortcodes; executing a match copies the emoji to the clipboard.
+_Avoid_: emoji mode, emoji picker
+
 **Application catalog**:
 Cockpit’s independently maintained record of launchable macOS application bundles from its fixed application locations; it is separate from the filename index.
 _Avoid_: app index, installed-app list

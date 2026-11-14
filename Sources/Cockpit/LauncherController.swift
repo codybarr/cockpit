@@ -38,6 +38,11 @@ protocol CalculationCopying: AnyObject {
 }
 
 @MainActor
+protocol EmojiCopying: AnyObject {
+    func copy(_ emoji: Emoji) throws
+}
+
+@MainActor
 protocol ApplicationUseTracking: AnyObject {
     func score(for application: ApplicationCandidate) -> Int
     func recordLaunch(of application: ApplicationCandidate)
@@ -136,6 +141,8 @@ final class LauncherController: ObservableObject {
     private let fileOpener: any FileOpening
     private let fileRevealer: any FileRevealing
     private let calculationCopier: any CalculationCopying
+    private let emojiCopier: any EmojiCopying
+    private let emojiCatalog: EmojiCatalog
     private let useTracker: any ApplicationUseTracking
     private let search: ApplicationSearch
     private let clipboardHistory: ClipboardHistory?
@@ -158,6 +165,8 @@ final class LauncherController: ObservableObject {
         fileOpener: any FileOpening,
         fileRevealer: any FileRevealing,
         calculationCopier: any CalculationCopying,
+        emojiCopier: any EmojiCopying,
+        emojiCatalog: EmojiCatalog = .bundled,
         useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker(),
         search: ApplicationSearch = ApplicationSearch(),
         clipboardHistory: ClipboardHistory? = nil
@@ -172,6 +181,8 @@ final class LauncherController: ObservableObject {
         self.fileOpener = fileOpener
         self.fileRevealer = fileRevealer
         self.calculationCopier = calculationCopier
+        self.emojiCopier = emojiCopier
+        self.emojiCatalog = emojiCatalog
         self.useTracker = useTracker
         self.search = search
         self.clipboardHistory = clipboardHistory
@@ -233,7 +244,9 @@ final class LauncherController: ObservableObject {
         }
 
         do {
-            if query.hasPrefix("'") {
+            if query.first == EmojiCatalog.prefix {
+                state.results = emojiCatalog.matches(for: query).map(LauncherResult.emoji)
+            } else if query.hasPrefix("'") {
                 let filenameQuery = String(query.dropFirst()).trimmingCharacters(in: .whitespacesAndNewlines)
                 state.results = filenameQuery.count < 3
                     ? []
@@ -367,6 +380,8 @@ final class LauncherController: ObservableObject {
                 try systemActionExecutor.execute(action)
             case let .calculation(calculation):
                 try calculationCopier.copy(calculation)
+            case let .emoji(emoji):
+                try emojiCopier.copy(emoji)
             }
             dismiss()
         } catch {
@@ -385,7 +400,7 @@ final class LauncherController: ObservableObject {
             case let .clipboardEntry(entry):
                 copyClipboardEntry(entry, plainText: true)
                 return
-            case .systemAction, .calculation, .clipboardHistory: return
+            case .systemAction, .calculation, .clipboardHistory, .emoji: return
             }
             dismiss()
         } catch {

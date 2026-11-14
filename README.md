@@ -37,6 +37,12 @@ Scripts/install-local.sh /tmp/Cockpit.app
 
 Press **Option-Space** to show the Launcher by default. Use Cockpit’s menu-bar icon to choose **Settings…**, configure Launch at Login or select **Ctrl+Space**, **Alt+Space**, or **Cmd+Space**, or to show or quit the app. Cockpit searches `/Applications`, `/System/Applications`, `~/Applications`, the user-facing utilities in `/System/Library/CoreServices/Applications`, and the system Cryptex application location (including Safari) without Spotlight, alongside Lock, Restart, and Shut Down System actions. It also discovers tools in application bundles’ `Contents/Applications` and `Contents/Developer/Applications` directories, without exposing arbitrary bundle helpers. Overlapping locations and symlinks to the same application produce one result, using its native macOS icon. Select a result and press Return to open the application or run the System action.
 
+## Emoji
+
+Type a colon to search emoji by shortcode, e.g. `:joy` or `:joy:` for 😂. A bare `:` shows a fixed set of common emoji. Press **Return** to copy the selected emoji and dismiss; press **⌘V** in your destination to paste. Cockpit never inserts text into other apps, so this needs no extra permissions.
+
+Shortcodes are the GitHub names from [gemoji](https://github.com/github/gemoji) (MIT), bundled as `Sources/Cockpit/Resources/Emoji.json`; nothing is fetched at runtime.
+
 ## Clipboard history
 
 Enable **Clipboard History** in Settings, then search for **Clipboard History** in the Launcher and press Return. It opens recent copies in the same single-column layout. Type to filter text and file paths; use the arrow keys to select an entry.

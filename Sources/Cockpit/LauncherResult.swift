@@ -8,6 +8,7 @@ enum LauncherResult: Equatable, Sendable, Identifiable {
     case calculation(Calculation)
     case clipboardHistory
     case clipboardEntry(ClipboardEntry)
+    case emoji(Emoji)
 
     var id: String {
         switch self {
@@ -18,6 +19,7 @@ enum LauncherResult: Equatable, Sendable, Identifiable {
         case let .calculation(calculation): "calculation:\(calculation.value)"
         case .clipboardHistory: "clipboard-history"
         case let .clipboardEntry(entry): "clipboard-entry:\(entry.id)"
+        case let .emoji(emoji): "emoji:\(emoji.character)"
         }
     }
 
@@ -30,6 +32,7 @@ enum LauncherResult: Equatable, Sendable, Identifiable {
         case let .calculation(calculation): calculation.value
         case .clipboardHistory: "Clipboard History"
         case let .clipboardEntry(entry): entry.label
+        case let .emoji(emoji): ":\(emoji.shortcode):"
         }
     }
 }
@@ -62,7 +65,7 @@ extension LauncherResult: LauncherSearchable {
         case let .application(application): application.normalizedName
         case let .systemSettingsPane(pane): pane.normalizedSearchLabel
         case let .file(file): file.normalizedName
-        case .systemAction, .calculation, .clipboardHistory, .clipboardEntry: SearchNormalizer.normalize(label)
+        case .systemAction, .calculation, .clipboardHistory, .clipboardEntry, .emoji: SearchNormalizer.normalize(label)
         }
     }
 

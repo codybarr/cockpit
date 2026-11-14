@@ -6,7 +6,7 @@ import SwiftUI
 @MainActor
 final class CockpitApp: NSObject, NSApplicationDelegate {
     private let workspaceLauncher = WorkspaceApplicationLauncher()
-    private let calculationCopier = PasteboardCalculationCopier()
+    private let textCopier = PasteboardTextCopier()
     private let systemActionExecutor = MacOSSystemActionExecutor()
     private let loginItemSettings = LoginItemSettings()
     private lazy var launcherHotkeySettings = LauncherHotkeySettings { [weak self] hotkey in
@@ -31,7 +31,8 @@ final class CockpitApp: NSObject, NSApplicationDelegate {
         filenameIndex: filenameIndex,
         fileOpener: workspaceLauncher,
         fileRevealer: workspaceLauncher,
-        calculationCopier: calculationCopier,
+        calculationCopier: textCopier,
+        emojiCopier: textCopier,
         useTracker: applicationUseTracker,
         clipboardHistory: clipboardHistory
     )
@@ -193,11 +194,14 @@ final class WorkspaceApplicationLauncher: ApplicationLaunching, ApplicationRevea
 }
 
 @MainActor
-final class PasteboardCalculationCopier: CalculationCopying {
-    func copy(_ calculation: Calculation) throws {
+final class PasteboardTextCopier: CalculationCopying, EmojiCopying {
+    func copy(_ calculation: Calculation) throws { try copy(calculation.value) }
+    func copy(_ emoji: Emoji) throws { try copy(emoji.character) }
+
+    private func copy(_ text: String) throws {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        guard pasteboard.setString(calculation.value, forType: .string) else {
+        guard pasteboard.setString(text, forType: .string) else {
             throw CopyError.unavailable
         }
     }
@@ -569,6 +573,9 @@ private struct LauncherResultRow: View {
                 Image(systemName: entry.isFileBatch ? "doc" : "doc.text")
                     .font(.system(size: 26))
             }
+        case let .emoji(emoji):
+            Text(emoji.character)
+                .font(.system(size: 30))
         }
     }
 
@@ -599,6 +606,8 @@ private struct LauncherResultRow: View {
             "Show recent copies"
         case let .clipboardEntry(entry):
             isRevealHintVisible && entry.plainText != nil ? "Copy as plain text" : entry.detail
+        case let .emoji(emoji):
+            emoji.description
         }
     }
 }

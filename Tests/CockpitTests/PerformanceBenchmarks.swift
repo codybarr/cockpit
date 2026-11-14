@@ -91,6 +91,7 @@ final class PerformanceBenchmarks: XCTestCase {
             fileOpener: NoopWorkspace(),
             fileRevealer: NoopWorkspace(),
             calculationCopier: NoopWorkspace(),
+            emojiCopier: NoopWorkspace(),
             clipboardHistory: clipboardHistory
         )
     }
@@ -113,13 +114,14 @@ private final class EmptyCatalog: ApplicationCataloging {
 }
 
 @MainActor
-private final class NoopWorkspace: ApplicationLaunching, ApplicationRevealing, SystemSettingsPaneLaunching, FileOpening, FileRevealing, CalculationCopying {
+private final class NoopWorkspace: ApplicationLaunching, ApplicationRevealing, SystemSettingsPaneLaunching, FileOpening, FileRevealing, CalculationCopying, EmojiCopying {
     func launch(_: ApplicationCandidate, completion: @escaping ApplicationLaunchCompletion) throws { completion(.success(())) }
     func launch(_: SystemSettingsPane) throws {}
     func reveal(_: ApplicationCandidate) throws {}
     func open(_: FilenameCandidate) throws {}
     func reveal(_: FilenameCandidate) throws {}
     func copy(_: Calculation) throws {}
+    func copy(_: Emoji) throws {}
 }
 
 @MainActor

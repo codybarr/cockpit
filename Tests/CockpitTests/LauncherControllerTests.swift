@@ -269,6 +269,24 @@ final class LauncherControllerTests: XCTestCase {
         }
     }
 
+    func testEmojiPrefixShowsShortcodeMatchesAndCopiesTheEmojiWhenExecuted() {
+        let copier = RecordingEmojiCopier()
+        let controller = makeController(catalog: StubCatalog(applications: []), emojiCopier: copier)
+        controller.invoke()
+
+        controller.updateQuery(":")
+        XCTAssertEqual(controller.state.results.map(\.label).first, ":joy:")
+        XCTAssertEqual(controller.state.results.count, EmojiCatalog.popularShortcodes.count)
+
+        controller.updateQuery(":joy:")
+        let joy = Emoji(character: "😂", shortcode: "joy", description: "face with tears of joy")
+        XCTAssertEqual(controller.state.results.first, .emoji(joy))
+        controller.executeSelectedResult()
+
+        XCTAssertEqual(copier.copiedEmoji, [joy])
+        XCTAssertFalse(controller.state.isVisible)
+    }
+
     func testValidArithmeticExpressionShowsCalculatorResultAndCopiesItWhenExecuted() {
         let copier = RecordingCalculationCopier()
         let controller = makeController(catalog: StubCatalog(applications: []), calculationCopier: copier)
@@ -635,6 +653,7 @@ final class LauncherControllerTests: XCTestCase {
         fileOpener: RecordingFileOpener = RecordingFileOpener(),
         fileRevealer: RecordingFileRevealer = RecordingFileRevealer(),
         calculationCopier: RecordingCalculationCopier = RecordingCalculationCopier(),
+        emojiCopier: RecordingEmojiCopier = RecordingEmojiCopier(),
         useTracker: any ApplicationUseTracking = InMemoryApplicationUseTracker(),
         clipboardHistory: ClipboardHistory? = nil
     ) -> LauncherController {
@@ -649,6 +668,7 @@ final class LauncherControllerTests: XCTestCase {
             fileOpener: fileOpener,
             fileRevealer: fileRevealer,
             calculationCopier: calculationCopier,
+            emojiCopier: emojiCopier,
             useTracker: useTracker,
             clipboardHistory: clipboardHistory
         )
@@ -672,6 +692,12 @@ private final class StubFilenameIndex: FilenameIndexing {
 private final class RecordingCalculationCopier: CalculationCopying {
     private(set) var copiedCalculations: [Calculation] = []
     func copy(_ calculation: Calculation) throws { copiedCalculations.append(calculation) }
+}
+
+@MainActor
+private final class RecordingEmojiCopier: EmojiCopying {
+    private(set) var copiedEmoji: [Emoji] = []
+    func copy(_ emoji: Emoji) throws { copiedEmoji.append(emoji) }
 }
 
 @MainActor

@@ -9,6 +9,7 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$root/Assets/Cockpit.icns" "$app/Contents/Resources/Cockpit.icns"
 cp "$root/Sources/Cockpit/Resources/CockpitMenuBarTemplate.png" "$app/Contents/Resources/CockpitMenuBarTemplate.png"
+cp "$root/Sources/Cockpit/Resources/Emoji.json" "$app/Contents/Resources/Emoji.json"
 (
   cd "$root"
   swift build -c release
